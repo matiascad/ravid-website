@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Star, Heart, Shield, Phone, Mail, Instagram, ChevronDown, Users, Quote, MessageCircle, Calendar, Clock, Award, BookOpen, Target, Sparkles, FlameKindling } from 'lucide-react';
+import { Star, Heart, Shield, Instagram, Users, Quote, MessageCircle, Clock, Award, BookOpen, Target, Sparkles, Flame } from 'lucide-react';
 
 export default function TuvalMemorialLanding() {
   const [formData, setFormData] = useState({
@@ -32,7 +32,17 @@ export default function TuvalMemorialLanding() {
       return;
     }
     
-    alert(`תודה על פנייתך. ניצור איתך קשר בהקדם.\n\nפרטים שנשלחו:\nשם: ${formData.name}\nטלפון: ${formData.phone}\nאימייל: ${formData.email}`);
+    const lines = [
+      `שלום רביד, אשמח להזמין הרצאה.`,
+      `שם: ${formData.name}`,
+      `טלפון: ${formData.phone}`,
+      formData.email ? `אימייל: ${formData.email}` : '',
+      formData.organization ? `ארגון: ${formData.organization}` : '',
+      formData.message ? `הודעה: ${formData.message}` : '',
+    ].filter(Boolean).join('\n');
+    
+    const waUrl = `https://wa.me/972503112243?text=${encodeURIComponent(lines)}`;
+    window.open(waUrl, '_blank');
     
     setFormData({
       name: '',
@@ -43,7 +53,7 @@ export default function TuvalMemorialLanding() {
     });
   };
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
@@ -98,11 +108,13 @@ export default function TuvalMemorialLanding() {
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-up animation-delay-800">
             <a 
-              href="#contact" 
-              className="inline-flex items-center px-10 py-5 bg-primary text-primary-foreground font-bold text-lg rounded-lg hover:bg-primary/90 transition-all transform hover:scale-105 shadow-memorial"
+              href="https://wa.me/972503112243?text=%D7%A9%D7%9C%D7%95%D7%9D%20%D7%A8%D7%91%D7%99%D7%93%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A9%D7%9E%D7%95%D7%A2%20%D7%A2%D7%9C%20%D7%94%D7%96%D7%9E%D7%A0%D7%AA%20%D7%94%D7%A8%D7%A6%D7%90%D7%94"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-10 py-5 bg-green-600 text-white font-bold text-lg rounded-lg hover:bg-green-700 transition-all transform hover:scale-105 shadow-memorial"
             >
-              הזמן הרצאה עכשיו
-              <ChevronDown className="ml-3 animate-bounce" />
+              <MessageCircle className="ml-3 w-6 h-6" />
+              הזמן הרצאה בוואטסאפ
             </a>
             <a 
               href="#about" 
@@ -313,7 +325,7 @@ export default function TuvalMemorialLanding() {
               
               <div className="space-y-6">
                 <div className="flex gap-4">
-                  <FlameKindling className="w-8 h-8 text-primary flex-shrink-0 mt-1" />
+                  <Flame className="w-8 h-8 text-primary flex-shrink-0 mt-1" />
                   <div>
                     <h4 className="text-xl font-bold mb-2">סיפור אישי נוגע ללב</h4>
                     <p className="text-lg text-muted-foreground">
@@ -440,7 +452,7 @@ export default function TuvalMemorialLanding() {
       </section>
 
       {/* Why Choose This Lecture */}
-      <section className="py-20 px-4 bg-memorial-gradient text-primary-foreground">
+      <section className="py-20 px-4 bg-primary text-primary-foreground">
         <div className="max-w-4xl mx-auto text-center">
           <h3 className="text-4xl font-bold mb-12 animate-fade-up">למה להזמין את ההרצאה הזו?</h3>
           
@@ -456,9 +468,9 @@ export default function TuvalMemorialLanding() {
             </p>
           </div>
           
-          <a href="#contact" className="inline-flex items-center px-10 py-5 mt-12 bg-primary-foreground text-primary font-bold text-lg rounded-lg hover:bg-primary-foreground/90 transition-all transform hover:scale-105 shadow-memorial animate-fade-up animation-delay-600">
-            הזמן הרצאה עכשיו
-            <MessageCircle className="mr-3" />
+          <a href="https://wa.me/972503112243?text=%D7%A9%D7%9C%D7%95%D7%9D%20%D7%A8%D7%91%D7%99%D7%93%2C%20%D7%90%D7%A9%D7%9E%D7%97%20%D7%9C%D7%A9%D7%9E%D7%95%D7%A2%20%D7%A2%D7%9C%20%D7%94%D7%96%D7%9E%D7%A0%D7%AA%20%D7%94%D7%A8%D7%A6%D7%90%D7%94" target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-10 py-5 mt-12 bg-green-500 text-white font-bold text-lg rounded-lg hover:bg-green-600 transition-all transform hover:scale-105 shadow-memorial animate-fade-up animation-delay-600">
+            <MessageCircle className="ml-3 w-6 h-6" />
+            הזמן הרצאה בוואטסאפ
           </a>
         </div>
       </section>
@@ -532,7 +544,7 @@ export default function TuvalMemorialLanding() {
                 name="message"
                 value={formData.message}
                 onChange={handleChange}
-                rows="5"
+                rows={5}
                 className="w-full px-4 py-3 border-2 border-border rounded-lg focus:outline-none focus:border-primary transition-all duration-300 hover:border-muted-foreground resize-none bg-background"
                 placeholder="ספר/י לנו על האירוע, הקהל היעד, התאריך המבוקש ופרטים נוספים..."
               />
@@ -542,7 +554,7 @@ export default function TuvalMemorialLanding() {
               onClick={handleSubmit}
               className="w-full py-5 bg-primary text-primary-foreground font-bold text-lg rounded-lg hover:bg-primary/90 transition-all transform hover:scale-105 shadow-memorial hover:shadow-memorial-glow"
             >
-              שלח פנייה להזמנת הרצאה
+              שלח פנייה דרך וואטסאפ
             </button>
           </div>
           
@@ -575,7 +587,7 @@ export default function TuvalMemorialLanding() {
           <div className="border-t border-primary-foreground/20 pt-8 mt-8">
             <p className="text-lg font-semibold mb-2">"בסוף הכל יהיה בסדר"</p>
             <p className="text-sm opacity-70">
-              © 2024 כל הזכויות שמורות | נבנה באהבה להנצחת זכרו של תובל
+              © 2025 כל הזכויות שמורות | נבנה באהבה להנצחת זכרו של תובל
             </p>
           </div>
         </div>
