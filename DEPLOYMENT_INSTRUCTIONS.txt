@@ -1,0 +1,139 @@
+═══════════════════════════════════════════════════════════════
+🚨 CRITICAL: PHOTOS NOT SHOWING - DEPLOYMENT FIX
+═══════════════════════════════════════════════════════════════
+
+PROBLEM: The website is deployed but photos aren't showing!
+
+ROOT CAUSE:
+  - Component had placeholder DIVs instead of actual <Image> tags
+  - Photos aren't in your GitHub repository
+
+SOLUTION: Upload these files to GitHub
+
+═══════════════════════════════════════════════════════════════
+📁 FILES TO UPLOAD
+═══════════════════════════════════════════════════════════════
+
+1. UPDATED COMPONENT:
+   components/TuvalMemorialLanding.tsx
+   
+   ↓ Upload this to:
+   your-repo/components/TuvalMemorialLanding.tsx
+
+2. ALL 7 PHOTOS:
+   public/images/ravid-lecture-1-youth-event.jpg
+   public/images/ravid-lecture-2-idf-event.jpg
+   public/images/ravid-lecture-3-soldiers-ceremony.jpg
+   public/images/tuval_01.jpg
+   public/images/tuval_02.jpg
+   public/images/tuval_03.jpg
+   public/images/tuval_04.jpg
+   
+   ↓ Upload these to:
+   your-repo/public/images/
+
+═══════════════════════════════════════════════════════════════
+📋 DEPLOYMENT STEPS
+═══════════════════════════════════════════════════════════════
+
+METHOD 1: Via GitHub Website (Easiest)
+──────────────────────────────────────
+
+STEP 1: Upload Component
+  1. Go to: https://github.com/matiascad/ravid-website
+  2. Navigate to: components/
+  3. Click: "Add file" → "Upload files"
+  4. Upload: TuvalMemorialLanding.tsx
+  5. Commit message: "Fix: Add actual images to component"
+  6. Click: "Commit changes"
+
+STEP 2: Create images folder (if doesn't exist)
+  1. Navigate to: public/
+  2. Click: "Add file" → "Create new file"
+  3. Type: images/.gitkeep
+  4. Click: "Commit new file"
+
+STEP 3: Upload Photos
+  1. Navigate to: public/images/
+  2. Click: "Add file" → "Upload files"
+  3. Upload ALL 7 photos from this package
+  4. Commit message: "Add memorial photos"
+  5. Click: "Commit changes"
+
+STEP 4: Vercel Auto-Deploy
+  - Vercel will automatically detect changes
+  - Wait 30-60 seconds for deployment
+  - Check: www.ravid-speaks.com
+  - Photos should now appear! ✅
+
+METHOD 2: Via Git Command Line
+──────────────────────────────
+
+# Navigate to your local repo
+cd path/to/ravid-website
+
+# Copy files from this package
+cp DEPLOY-WITH-IMAGES/components/TuvalMemorialLanding.tsx components/
+cp DEPLOY-WITH-IMAGES/public/images/*.jpg public/images/
+
+# Commit and push
+git add components/TuvalMemorialLanding.tsx
+git add public/images/*.jpg
+git commit -m "Fix: Add actual images to memorial website"
+git push origin main
+
+# Vercel auto-deploys in 30-60 seconds
+
+═══════════════════════════════════════════════════════════════
+✅ WHAT WAS FIXED
+═══════════════════════════════════════════════════════════════
+
+BEFORE:
+  - Placeholder gray boxes with text
+  - No actual images
+  
+AFTER:
+  - Real Next.js <Image> components
+  - 4 Tuval memorial photos
+  - 3 Ravid lecture photos
+  - Proper alt text in Hebrew
+  - Optimized image loading
+
+═══════════════════════════════════════════════════════════════
+🔍 VERIFY DEPLOYMENT
+═══════════════════════════════════════════════════════════════
+
+After deploying, check:
+  ✓ Go to www.ravid-speaks.com
+  ✓ Scroll to "על תובל" section
+  ✓ See 4 memorial photos in 2x2 grid
+  ✓ Scroll to "מההרצאות שלי" section
+  ✓ See 3 lecture photos in row
+  
+If photos still don't show:
+  1. Check GitHub repo has all 7 .jpg files in public/images/
+  2. Check component file is updated
+  3. Wait 2 minutes for Vercel cache to clear
+  4. Hard refresh browser (Ctrl+Shift+R or Cmd+Shift+R)
+
+═══════════════════════════════════════════════════════════════
+📊 PACKAGE CONTENTS
+═══════════════════════════════════════════════════════════════
+
+components/
+  └── TuvalMemorialLanding.tsx    [UPDATED - with Image tags]
+
+public/images/
+  ├── ravid-lecture-1-youth-event.jpg        255KB
+  ├── ravid-lecture-2-idf-event.jpg          122KB
+  ├── ravid-lecture-3-soldiers-ceremony.jpg   83KB
+  ├── tuval_01.jpg                            71KB
+  ├── tuval_02.jpg                            43KB
+  ├── tuval_03.jpg                            46KB
+  └── tuval_04.jpg                           364KB
+
+Total: 1 component + 7 photos = 8 files
+
+═══════════════════════════════════════════════════════════════
+END OF INSTRUCTIONS
+═══════════════════════════════════════════════════════════════

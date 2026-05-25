@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Star, Heart, Shield, Phone, Mail, Instagram, ChevronDown, Users, Quote, MessageCircle, Calendar, Clock, Award, BookOpen, Target, Sparkles, Flame } from 'lucide-react';
 
 export default function TuvalMemorialLanding() {
@@ -153,25 +154,37 @@ export default function TuvalMemorialLanding() {
               <div className="space-y-6">
                 <h4 className="text-2xl font-semibold text-center mb-4">זיכרונות מתובל</h4>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-muted h-48 rounded-lg shadow-memorial hover:shadow-memorial-glow transition-all duration-300 transform hover:scale-105 animate-fade-up overflow-hidden">
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                      <span className="text-sm">תמונת ילדות</span>
-                    </div>
+                  <div className="bg-muted h-48 rounded-lg shadow-memorial hover:shadow-memorial-glow transition-all duration-300 transform hover:scale-105 animate-fade-up overflow-hidden relative">
+                    <Image 
+                      src="/images/tuval_02.jpg" 
+                      alt="תובל בילדות עם גיטרה"
+                      fill
+                      className="object-cover"
+                    />
                   </div>
-                  <div className="bg-muted h-48 rounded-lg shadow-memorial hover:shadow-memorial-glow transition-all duration-300 transform hover:scale-105 animate-fade-up animation-delay-100 overflow-hidden">
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                      <span className="text-sm">עם המשפחה</span>
-                    </div>
+                  <div className="bg-muted h-48 rounded-lg shadow-memorial hover:shadow-memorial-glow transition-all duration-300 transform hover:scale-105 animate-fade-up animation-delay-100 overflow-hidden relative">
+                    <Image 
+                      src="/images/tuval_03.jpg" 
+                      alt="תובל עם המשפחה"
+                      fill
+                      className="object-cover"
+                    />
                   </div>
-                  <div className="bg-muted h-48 rounded-lg shadow-memorial hover:shadow-memorial-glow transition-all duration-300 transform hover:scale-105 animate-fade-up animation-delay-200 overflow-hidden">
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                      <span className="text-sm">בטירונות</span>
-                    </div>
+                  <div className="bg-muted h-48 rounded-lg shadow-memorial hover:shadow-memorial-glow transition-all duration-300 transform hover:scale-105 animate-fade-up animation-delay-200 overflow-hidden relative">
+                    <Image 
+                      src="/images/tuval_04.jpg" 
+                      alt="תובל בשירות - על הטנק"
+                      fill
+                      className="object-cover"
+                    />
                   </div>
-                  <div className="bg-muted h-48 rounded-lg shadow-memorial hover:shadow-memorial-glow transition-all duration-300 transform hover:scale-105 animate-fade-up animation-delay-300 overflow-hidden">
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                      <span className="text-sm">עם החברים ביחידה</span>
-                    </div>
+                  <div className="bg-muted h-48 rounded-lg shadow-memorial hover:shadow-memorial-glow transition-all duration-300 transform hover:scale-105 animate-fade-up animation-delay-300 overflow-hidden relative">
+                    <Image 
+                      src="/images/tuval_01.jpg" 
+                      alt="תובל בכובע מגן"
+                      fill
+                      className="object-cover"
+                    />
                   </div>
                 </div>
                 <p className="text-center text-muted-foreground mt-4">
@@ -236,33 +249,30 @@ export default function TuvalMemorialLanding() {
           
           <div className="grid md:grid-cols-3 gap-8 mb-12">
             <div className="relative h-80 bg-muted rounded-lg shadow-memorial hover:shadow-memorial-glow transition-all duration-300 transform hover:scale-105 animate-fade-up overflow-hidden">
-              <div className="absolute inset-0 flex items-center justify-center text-muted-foreground p-4 text-center">
-                <div>
-                  <Users className="w-16 h-16 mx-auto mb-2" />
-                  <p className="font-semibold">הרצאה בעיר הבה"דים</p>
-                  <p className="text-sm mt-2">מול 300 חיילים לפני כניסה לעזה</p>
-                </div>
-              </div>
+              <Image 
+                src="/images/ravid-lecture-1-youth-event.jpg" 
+                alt="רביד מרצה בפני צעירים"
+                fill
+                className="object-cover"
+              />
             </div>
             
             <div className="relative h-80 bg-muted rounded-lg shadow-memorial hover:shadow-memorial-glow transition-all duration-300 transform hover:scale-105 animate-fade-up animation-delay-100 overflow-hidden">
-              <div className="absolute inset-0 flex items-center justify-center text-muted-foreground p-4 text-center">
-                <div>
-                  <BookOpen className="w-16 h-16 mx-auto mb-2" />
-                  <p className="font-semibold">מכינה קדם צבאית</p>
-                  <p className="text-sm mt-2">הכנת המלש"בים לשירות משמעותי</p>
-                </div>
-              </div>
+              <Image 
+                src="/images/ravid-lecture-2-idf-event.jpg" 
+                alt="רביד בהרצאה לחיילי צה״ל"
+                fill
+                className="object-cover"
+              />
             </div>
             
             <div className="relative h-80 bg-muted rounded-lg shadow-memorial hover:shadow-memorial-glow transition-all duration-300 transform hover:scale-105 animate-fade-up animation-delay-200 overflow-hidden">
-              <div className="absolute inset-0 flex items-center justify-center text-muted-foreground p-4 text-center">
-                <div>
-                  <Heart className="w-16 h-16 mx-auto mb-2" />
-                  <p className="font-semibold">מפגש עם משפחות</p>
-                  <p className="text-sm mt-2">שיח פתוח על אובדן ותקווה</p>
-                </div>
-              </div>
+              <Image 
+                src="/images/ravid-lecture-3-soldiers-ceremony.jpg" 
+                alt="רביד בטקס עם חיילים"
+                fill
+                className="object-cover"
+              />
             </div>
           </div>
           
