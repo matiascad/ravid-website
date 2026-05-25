@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import Analytics from '@/components/Analytics'
 
 export const metadata: Metadata = {
   title: 'בסוף הכל יהיה בסדר - הרצאות להנצחת תובל ז"ל',
@@ -25,10 +24,7 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
-      <body>
-        <Analytics />
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   )
 }
