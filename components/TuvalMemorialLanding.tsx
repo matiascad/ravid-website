@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Star, Heart, Shield, Phone, Mail, Instagram, ChevronDown, Users, Quote, MessageCircle, Calendar, Clock, Award, BookOpen, Target, Sparkles, FlameKindling } from 'lucide-react';
+import { Star, Heart, Shield, Phone, Mail, Instagram, ChevronDown, Users, Quote, MessageCircle, Calendar, Clock, Award, BookOpen, Target, Sparkles, Flame } from 'lucide-react';
 
 export default function TuvalMemorialLanding() {
   const [formData, setFormData] = useState({
@@ -313,7 +313,7 @@ export default function TuvalMemorialLanding() {
               
               <div className="space-y-6">
                 <div className="flex gap-4">
-                  <FlameKindling className="w-8 h-8 text-primary flex-shrink-0 mt-1" />
+                  <Flame className="w-8 h-8 text-primary flex-shrink-0 mt-1" />
                   <div>
                     <h4 className="text-xl font-bold mb-2">סיפור אישי נוגע ללב</h4>
                     <p className="text-lg text-muted-foreground">
