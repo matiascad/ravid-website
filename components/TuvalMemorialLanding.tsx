@@ -532,7 +532,7 @@ export default function TuvalMemorialLanding() {
                 name="message"
                 value={formData.message}
                 onChange={handleChange}
-                rows="5"
+                rows={5}
                 className="w-full px-4 py-3 border-2 border-border rounded-lg focus:outline-none focus:border-primary transition-all duration-300 hover:border-muted-foreground resize-none bg-background"
                 placeholder="ספר/י לנו על האירוע, הקהל היעד, התאריך המבוקש ופרטים נוספים..."
               />
