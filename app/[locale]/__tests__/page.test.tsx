@@ -30,9 +30,14 @@
 //                  real hook throws, so the switcher's HREFS are not what this
 //                  file proves — its MOUNTING is. LanguageSwitcher.test.tsx owns
 //                  the link behaviour.
-//               4. ONE LOCALE. The page is rendered in the source locale only.
-//                  A per-locale render would assert the same thirteen markers
-//                  with different strings, proving nothing this does not.
+//               4. ONE LOCALE, FOR TESTS 0-4. The marker tests render the source
+//                  locale only: a per-locale render would assert the same
+//                  thirteen markers with different strings, proving nothing they
+//                  do not. TEST 5 IS THE EXCEPTION and renders BOTH — not for
+//                  the strings, but because the funnel order is a promise made
+//                  to every visitor, and a page that composed its sections
+//                  per-locale could keep it in one locale and break it in the
+//                  other. That failure is only visible if both are rendered.
 //               5. `setRequestLocale` IS STUBBED, so this file says NOTHING about
 //                  whether the route is opted into static rendering — the reason
 //                  is at the mock itself, and the downstream build-and-probe gate
@@ -40,7 +45,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { render, screen } from '@testing-library/react'
 
-import { SECTION_IDS } from '@/config/site'
+import { LOCALES, SECTION_IDS, type Locale } from '@/config/site'
 import { getMessages, SOURCE_LOCALE } from '@/i18n/messages'
 
 import LocaleHomePage from '../page'
@@ -73,10 +78,13 @@ function byId(id: string): Element | null {
 }
 
 /**
- * THE THIRTEEN, in the order `app/[locale]/page.tsx` declares — which is W1's
- * measurement of the customer's own page. Each marker is output only that
- * section produces: an anchor id it owns, a heading string only it renders, or a
- * `data-testid` its own test already relies on.
+ * THE THIRTEEN, in the order `app/[locale]/page.tsx` declares — W1's measurement
+ * of the customer's own page, with ONE DELIBERATE DEPARTURE: W12-C moved `Wine`
+ * to AFTER `LeadForm`, so the page's only outbound link no longer precedes its
+ * only conversion. That pair is the one entry below a reader should challenge on
+ * the merits rather than against the customer's Index.tsx. Each marker is output
+ * only that section produces: an anchor id it owns, a heading string only it
+ * renders, or a `data-testid` its own test already relies on.
  */
 const SECTIONS: ReadonlyArray<readonly [name: string, find: () => Element | null]> = [
   // Its links are the only ones on the page carrying `hreflang`.
@@ -90,14 +98,39 @@ const SECTIONS: ReadonlyArray<readonly [name: string, find: () => Element | null
   ['HowItLooks', () => screen.getAllByText(m.howTitle)[0] ?? null],
   ['Testimonials', () => byId('testimonials-title')],
   ['Why', () => byId('why-title')],
-  ['Wine', () => screen.getAllByText(m.wineTitle)[0] ?? null],
+  // W12-C: LeadForm before Wine. The page's only conversion now precedes the
+  // page's only outbound link. See test 5 for the assertion that means it.
   ['LeadForm', () => byId(SECTION_IDS.form)],
+  ['Wine', () => screen.getAllByText(m.wineTitle)[0] ?? null],
   ['Footer', () => byId(SECTION_IDS.copyright)],
 ]
 
-async function renderPage() {
-  return render(await LocaleHomePage({ params: Promise.resolve({ locale: SOURCE_LOCALE }) }))
+async function renderPage(locale: Locale = SOURCE_LOCALE) {
+  return render(await LocaleHomePage({ params: Promise.resolve({ locale }) }))
 }
+
+/**
+ * The `<section>` children of `<main>`, IN DOCUMENT ORDER — `querySelectorAll`
+ * returns its matches in document order, so this list IS the reader's sequence.
+ * Asserted on the RENDERED tree, never on the order of JSX or of imports in
+ * page.tsx (ledger law 8: a name is not a thing).
+ */
+function mainSectionsInDocumentOrder(container: HTMLElement): readonly Element[] {
+  const main = container.querySelector('main')
+  // A throw, not `!` or `as`: both are ESLint errors here, and a silent return
+  // would let the assertions below never run and still report green.
+  if (main === null) throw new Error('the page rendered no <main> landmark')
+
+  return Array.from(main.querySelectorAll(':scope > section'))
+}
+
+/**
+ * The flow sections inside `<main>`. Twelve are mounted; `Speaker` renders
+ * nothing today (W11-B), so eleven reach the DOM. Stated ONCE because two tests
+ * below depend on it: a REORDER must leave this number untouched, and a change
+ * that moves it was not a reorder.
+ */
+const FLOW_SECTIONS = 11
 
 test('0. the list under test is thirteen sections — the denominator, pinned', () => {
   // If a fourteenth section is composed into the page and not added here, this
@@ -150,7 +183,7 @@ test('3. the page is one <main> landmark, with the switcher and footer outside i
   // The eleven flow sections live inside it; the fixed control and the page
   // footer are siblings, not children. This is the one markup decision page.tsx
   // makes (its HONEST LIMIT 3), so it is asserted rather than assumed.
-  expect(main.querySelectorAll(':scope > section')).toHaveLength(11)
+  expect(mainSectionsInDocumentOrder(container)).toHaveLength(FLOW_SECTIONS)
   expect(main.querySelector('a[hreflang]')).toBeNull()
   expect(main.querySelector('footer')).toBeNull()
   expect(container.querySelector('footer')).not.toBeNull()
@@ -165,3 +198,56 @@ test('4. the four live in-page anchor ids are reachable on the composed page', a
     expect(document.body.querySelectorAll(`#${id}`), `#${id}`).toHaveLength(1)
   }
 })
+
+/* ── 5. W12-C · THE FUNNEL ORDER, IN THE RENDERED DOM ─────────────────────── */
+
+/**
+ * The wine block is the only OUTBOUND link on a page that sells ONE thing. It
+ * must not stand in front of the form.
+ *
+ * WHY THIS IS NOT A RESTATEMENT OF TEST 2. Test 2 walks a hand-written list and
+ * proves each named marker precedes the next. This one never consults a list: it
+ * takes the `<section>` children of `<main>` AS THE BROWSER WOULD SEE THEM —
+ * `querySelectorAll` returns its matches in DOCUMENT ORDER, which is the
+ * reader's order — and finds the two sections by what they CONTAIN. So it is
+ * indifferent to how page.tsx is written: moving the JSX back without moving the
+ * rendered output is not a thing that can happen, and neither is satisfying this
+ * by reordering imports. A name is not a thing (ledger law 8).
+ *
+ * HONEST LIMIT It proves SEQUENCE, not POSITION ON A SCREEN. jsdom lays nothing
+ * out; a section pulled visually above the form by CSS (`order`, a negative
+ * margin, `position`) would leave this green. That is W14-B's browser pass.
+ */
+
+test.each(LOCALES)(
+  '5. [%s] the wine block renders AFTER the lead form, in document order',
+  async (locale) => {
+    const { container } = await renderPage(locale)
+    const sections = mainSectionsInDocumentOrder(container)
+
+    // The count is the same eleven asserted in test 3. Reordering must not
+    // change it: if it has, the change was not a reorder.
+    expect(sections).toHaveLength(FLOW_SECTIONS)
+
+    const copy = getMessages(locale)
+    const formIndex = sections.findIndex(
+      (section) =>
+        section.id === SECTION_IDS.form ||
+        section.querySelector(`#${SECTION_IDS.form}`) !== null,
+    )
+    const wineIndex = sections.findIndex((section) =>
+      (section.textContent ?? '').includes(copy.wineTitle),
+    )
+
+    expect(formIndex, 'the lead form section').toBeGreaterThanOrEqual(0)
+    expect(wineIndex, 'the wine section').toBeGreaterThanOrEqual(0)
+    expect(formIndex, 'the form and the wine are the same section').not.toBe(
+      wineIndex,
+    )
+
+    expect(
+      wineIndex,
+      'the outbound wine links must not precede the only conversion on the page',
+    ).toBeGreaterThan(formIndex)
+  },
+)

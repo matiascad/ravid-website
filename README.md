@@ -43,29 +43,46 @@ app/
   not-found.tsx           the project's only 404 page's outer shell (D-27)
   [locale]/
     layout.tsx            the one <html lang dir> in the project (D-5)
-    page.tsx              composition point: one getMessages() call, 13 sections
+    page.tsx              composition point: ONE getMessages() call, 14 components
     not-found.tsx         the 404 copy and markup (D-25)
     [...rest]/            catch-all that makes the localised 404 reachable
   api/lead/route.ts       the lead endpoint
   sitemap.ts robots.ts opengraph-image.tsx    Next file-convention metadata routes
 components/
-  sections/               the 13 sections + LanguageSwitcher — pure, props-driven, server
+  sections/               16 .tsx files — see the note below
   Analytics.tsx           GA4 loader; renders null when unconfigured
+content/
+  speaker.ts              the speaker's own biography — typed, proved, and EMPTY (§OPEN 17)
 i18n/
   routing.ts              the routing contract; owns LOCALES-derived config
   request.ts              per-request locale resolution
   messages.ts             the ONLY sanctioned message reader (D-19, D-20, D-23)
+                          ⚠️ z.strictObject — a catalogue key with no schema key
+                          throws at MODULE LOAD and the site fails to serve
 lib/
   seo.ts validation.ts analytics.ts utils.ts
+  analytics/              track.ts + events.ts — the nine funnel events
+  leads/                  the lead sink port: types, port, log, autoresponse
+    sinks/                kv · webhook · http · composite · unconfigured · resolver
+  seo/jsonld.ts           structured data
 config/site.ts            every seeded constant and env-var NAME, one place (D-7)
 messages/{he,en}.json     all copy
 middleware.ts             / → /he, the metadata-route matcher, the method guard
 scripts/                  build-time asset optimiser (not shipped)
 public/images/            optimised .webp assets + MANIFEST.md
 _legacy/                  quarantine — see _legacy/WHY.md
-tests/e2e/                standalone .mjs browser probes (NOT Playwright specs)
-artifacts/screenshots/    the browser-pass screenshots
+playwright.config.ts      the e2e runner's config
+__tests__/                repo-level tests (middleware matcher, security headers)
+tests/e2e/                *.spec.ts = Playwright · *.mjs = standalone node probes
+artifacts/                screenshots and e2e output
 ```
+
+**On `components/sections/`:** 16 `.tsx` files, of which `app/[locale]/page.tsx` composes **14** — 13
+sections plus `LanguageSwitcher`. The other two are not page-level sections: `TrackedLink.tsx` is the
+analytics-instrumented link used by five sections, and `PrivacyNotice.tsx` is rendered *by* `LeadForm`
+(`LeadForm.tsx:964`), gated on `resolvePrivacyNotice(m)`, and emits **zero bytes** until §OPEN 19 is
+answered. Older docs said "13 sections"; that count was correct before `Speaker.tsx`,
+`PrivacyNotice.tsx` and `TrackedLink.tsx` existed.
 
 Tests sit in `__tests__/` beside what they test.
 
@@ -81,11 +98,17 @@ Tests sit in `__tests__/` beside what they test.
 | `npm run lint` | ESLint — enforces the message-reader ban and the `any`/`!` bans |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run test` | vitest, single run (`npm run test:watch` to watch) |
-| `npm run e2e` | ⚠️ **dead script** — see below |
+| `npm run e2e` | Playwright — real Chromium at 390×844, `/he` |
 
-⚠️ **`npm run e2e` is declared but cannot run.** There is no Playwright config and no Playwright spec in
-the repo. `tests/e2e/` holds standalone `.mjs` scripts invoked directly with `node`. Recorded in the
-ledger at §W7-A; treat any exit code from `npm run e2e` as meaningless.
+✅ **`npm run e2e` now works.** The "dead script" warning that stood here until 2026-09-13 was true when
+it was written and is now FALSE: `playwright.config.ts` exists at the repo root and
+`tests/e2e/cta-visibility.spec.ts` is a real spec. Measured by W15 at 06:29 on 2026-09-13:
+**6 passed, exit 0, 12.8 s, 1 worker, project `chromium-mobile-390`.**
+
+`tests/e2e/` now holds **both** kinds of probe and they are not interchangeable — `*.spec.ts` are
+Playwright specs that `npm run e2e` collects; `*.mjs` (`capture-screenshots`, `form-and-rtl`,
+`visual-verify`, plus the shared `e2e.env.mjs`) are standalone scripts still invoked directly with
+`node` and are **not** collected by the Playwright run. A green `npm run e2e` says nothing about them.
 
 The lint and typecheck commands examine different file sets — `tests/e2e/**` is linted but sits outside
 the tsconfig include. That is intended; see the note under the ledger's §W7 final gate before trying to
@@ -104,9 +127,18 @@ a typed constant. Nothing here is required to run the site locally.
 | `LEAD_TO_EMAIL` | `app/api/lead/route.ts` (name declared in `config/site.ts`) | as above — the three are resolved together |
 | `LEAD_FROM_EMAIL` | `app/api/lead/route.ts` | as above |
 | `NEXT_PUBLIC_SITE_URL` | `lib/seo.ts`, env-first | falls back to the `SITE_URL` constant in `config/site.ts`. Propagates to canonical tags, sitemap, hreflang and the OG card, so a wrong value is wrong in four places at once — which is why it is overridable at deploy time rather than only in code (ledger D-14). |
-| `NEXT_PUBLIC_GA_MEASUREMENT_ID` | `lib/analytics.ts` → `components/Analytics.tsx` | `Analytics` renders `null`; no analytics script is emitted and no request is made. This is the current state. |
+| `NEXT_PUBLIC_GA_MEASUREMENT_ID` | `lib/analytics.ts` → `components/Analytics.tsx` | `Analytics` renders `null`; no analytics script is emitted and no request is made. This is the current state. ⚠️ **There is no consent banner. Setting this variable starts tracking without one** — ledger §OPEN 15, the one open row with consequences beyond the screen. |
+| `KV_REST_API_URL` | the lead sink resolver, `lib/leads/sinks/**` | **see the block below — this is the first thing to check on the live host** |
+| `KV_REST_API_TOKEN` | as above (the two are resolved together) | as above |
+| `LEAD_WEBHOOK_URL` | as above — the *alternative* to the KV pair | as above. ⚠️ A value whose scheme is not `https:` counts as **unconfigured**, not as a misconfigured webhook. |
 
 A variable that is present but blank counts as unset.
+
+🔴 **The lead sink is what makes an enquiry outlive the email.** Either the `KV_REST_API_*` pair **or**
+`LEAD_WEBHOOK_URL` must be set on the deployed host. **With none of them set, `/api/lead` returns 503 and
+nothing is stored** — a real enquiry from a bereaved family is not queued, not retried and not recorded
+anywhere. Nothing in this repository can observe the live host, so **this is a check, not a known
+failure.** Confirm it in the hosting dashboard.
 
 **On the three lead variables:** with any of them missing the form still works — it reports the failure
 to the visitor and offers a WhatsApp fallback. It does **not** tell the visitor the message was sent.
@@ -126,5 +158,7 @@ anything from it.
 
 ## Further reading
 
-`START_HERE.md` (one page) · `MASTER_PLAN.md` (architecture and why) ·
-`SESSION_2_DELTA.md` (what changed this session) · `REBUILD_STATUS_v1_00.md` (the ledger).
+`START_HERE.md` (one page, and it names the first action owed) · `MASTER_PLAN.md` (architecture and why) ·
+`SESSION_3_DELTA.md` (what changed in the second overnight run — **and the two changes Ravid must approve**) ·
+`SESSION_2_DELTA.md` (the first run) · `STATUS_DASHBOARD.html` (the same picture on one offline page) ·
+`REBUILD_STATUS_v1_00.md` (the ledger — every count, every decision, every open item).

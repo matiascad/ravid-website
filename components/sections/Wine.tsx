@@ -2,9 +2,12 @@
 // W4-10 WINE — components/sections/Wine.tsx
 //
 // INVARIANT     A shop URL is written down exactly ONCE, in `WINE_URLS`
-//               (config/site.ts, ledger §OPEN 4), and this section reads it —
-//               never retypes it, never rebuilds it by concatenation, never
-//               interpolates a host into it. The set of products rendered is
+//               (config/site.ts, ledger §OPEN 4), and since W12-C this file no
+//               longer even READS it: the only way out of this section is
+//               `wineShopLink(variant)`, which owns both the address and its
+//               UTM query. There is no URL and no query string in this file —
+//               never retyped, never rebuilt by concatenation, never a host
+//               interpolated into one. The set of products rendered is
 //               likewise stated once: `PRODUCTS` below is
 //               `Record<WineVariant, …>`, so the products this section knows
 //               about ARE the keys of `WINE_URLS`, by type, not by agreement.
@@ -48,9 +51,10 @@
 //   2. LABEL↔PRODUCT PAIRING IS POSITIONAL. `m.wine` is `string[]` with no
 //      variant keys (ledger: array values are why the catalogue is flat), so
 //      `m.wine[0]` is the red wine only because both lists agree on order.
-//      Nothing in the type system enforces that. The test asserts the exact
-//      href of each card against the named `WINE_URLS` key, which is what makes
-//      a reordered catalogue red instead of silent.
+//      Nothing in the type system enforces that. The test parses each card's
+//      rendered href and asserts its base against the named `WINE_URLS` key AND
+//      its `utm_content` against that position's variant name, which is what
+//      makes a reordered catalogue red instead of silent.
 //   3. THE IMAGE FILES DO NOT EXIST YET. `/images/wine-*.webp` is the contract
 //      with W6; `public/images/` contains none of them at the time of writing.
 //      This file will render `<img src>` pointing at 404s until W6 lands them.
@@ -71,11 +75,38 @@
 // (ledger D-30). It renders no `id`: `SECTION_IDS` has four entries and this is
 // not one of them (C8) — inventing an anchor id would create a scroll target
 // nothing links to.
+//
+// W10-B ANALYTICS · All five shop links are `TrackedLink`s reporting
+// `wine_click`. The variant is read from `product.variant`, which the mapped
+// `ProductTable` pins to the entry's own key - so the event and the href cannot
+// name different wines. Server component unchanged; markup byte-identical.
+// HONEST LIMIT (analytics) Reports the press, not whether the shop was reached.
+//
+// W12-C ATTRIBUTION + POSITION · Two changes, both deliberate, both visible.
+//   (1) Every outbound href now comes from `wineShopLink(product.variant)`, so
+//       it carries the UTM params declared in config/site.ts. The `url` field is
+//       GONE from the product table: href and event now derive from ONE pinned
+//       field, so they cannot name different wines. `rel` is UNCHANGED —
+//       `noopener noreferrer` was already here and W12-C kept it; the UTM exists
+//       precisely because `noreferrer` strips the header the shop would
+//       otherwise have read. See config/site.ts for that argument in full.
+//   (2) THIS SECTION NOW RENDERS AFTER THE LEAD FORM (app/[locale]/page.tsx).
+//       It did not move because it is less important; it moved because it is the
+//       page's strongest OUTBOUND link and it was standing in front of the
+//       page's only conversion. Nothing in this file changed to achieve that —
+//       the move is one line in the composition, and page.test.tsx asserts it in
+//       the RENDERED DOM.
+// HONEST LIMIT (W12-C) The UTM proves nothing about what the shop records. No
+//   test here, and none possible here, observes the shop receiving a param; and
+//   a shop that strips or ignores the query would leave every assertion in this
+//   repo green. It also cannot see a click that never becomes a visit.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import Image from 'next/image'
 
-import { WINE_URLS, type WineVariant } from '@/config/site'
+import { TrackedLink } from '@/components/sections/TrackedLink'
+import { wineClick } from '@/lib/analytics/events'
+import { wineShopLink, type WineVariant } from '@/config/site'
 import type { Messages } from '@/i18n/messages'
 
 /** Exactly the keys this section reads. Derived from the catalogue type. */
@@ -88,26 +119,46 @@ export type WineProps = {
   readonly m: WineMessages
 }
 
-type Product = {
-  /** Read from `WINE_URLS`. Never a literal — see INVARIANT. */
-  readonly url: string
-  /** The W6 asset contract: a full path, not a basename assembled at the use site. */
-  readonly image: string
+/**
+ * The product table, as a MAPPED type over `WineVariant`. Mapped, not
+ * `Record<WineVariant, Product>`, for one reason W10-B needed: each entry's
+ * `variant` field is pinned to ITS OWN KEY, so `red: { variant: 'rose', … }` is
+ * a compile error. That is what lets a wine link carry its identity to the
+ * `wine_click` event without the event and the URL being able to name different
+ * wines — the INVARIANT at the top of this file, now enforced for the analytics
+ * payload as well as for the href.
+ */
+type ProductTable = {
+  readonly [V in WineVariant]: {
+    /**
+     * ITS OWN KEY, and since W12-C the ONLY identity in this table. The href
+     * and the `wine_click` event are BOTH derived from this one field at the
+     * use site, so a card that links to the rosé and reports the white is no
+     * longer merely unlikely — it is unconstructible. (Before W12-C a `url`
+     * field sat beside it and the two could be written out of step.)
+     */
+    readonly variant: V
+    /** The W6 asset contract: a full path, not a basename assembled at the use site. */
+    readonly image: string
+  }
 }
+
+/** One entry of the table, whichever wine it is. */
+type Product = ProductTable[WineVariant]
 
 /**
  * THE product table: one entry per shop URL, in display order.
  *
- * `Record<WineVariant, Product>` is the load-bearing part — it makes this table
+ * `ProductTable` is the load-bearing part — it makes this table
  * total over the keys of `WINE_URLS` at compile time (IMPOSSIBLE b). The array
  * literal order of the keys is the display order (HONEST LIMIT 1), and the
  * values carry no key, so nothing downstream needs to index by variant name.
  */
-const PRODUCTS: Record<WineVariant, Product> = {
-  red: { url: WINE_URLS.red, image: '/images/wine-red.webp' },
-  rose: { url: WINE_URLS.rose, image: '/images/wine-rose.webp' },
-  white: { url: WINE_URLS.white, image: '/images/wine-white.webp' },
-  trio: { url: WINE_URLS.trio, image: '/images/wine-trio.webp' },
+const PRODUCTS: ProductTable = {
+  red: { variant: 'red', image: '/images/wine-red.webp' },
+  rose: { variant: 'rose', image: '/images/wine-rose.webp' },
+  white: { variant: 'white', image: '/images/wine-white.webp' },
+  trio: { variant: 'trio', image: '/images/wine-trio.webp' },
 }
 
 /** Ordered, total, and carrying no index-signature lookup. */
@@ -123,6 +174,14 @@ const EXTERNAL_LINK = {
   target: '_blank',
   rel: 'noopener noreferrer',
 } as const
+
+/**
+ * The closing CTA's product. Named ONCE so its href and its event read the same
+ * pinned `variant` field — see `ProductTable.variant`. HONEST LIMIT 5 (which
+ * product the CTA points at) is unchanged; this only removes the chance of the
+ * link and the event disagreeing about it.
+ */
+const CTA_PRODUCT = PRODUCTS.trio
 
 export function Wine({ m }: WineProps) {
   return (
@@ -158,9 +217,10 @@ export function Wine({ m }: WineProps) {
                     </span>
                   </div>
                 ) : (
-                  <a
-                    href={product.url}
+                  <TrackedLink
+                    href={wineShopLink(product.variant)}
                     {...EXTERNAL_LINK}
+                    event={wineClick(product.variant)}
                     className="group flex w-full flex-col items-center rounded-xl border border-white/20 bg-black/50 p-4 backdrop-blur-sm transition-colors hover:border-white/60"
                   >
                     <Image
@@ -174,7 +234,7 @@ export function Wine({ m }: WineProps) {
                     <span className="mt-3 text-center text-sm font-bold text-white">
                       {label}
                     </span>
-                  </a>
+                  </TrackedLink>
                 )}
               </li>
             )
@@ -182,13 +242,14 @@ export function Wine({ m }: WineProps) {
         </ul>
 
         <div className="text-center">
-          <a
-            href={PRODUCTS.trio.url}
+          <TrackedLink
+            href={wineShopLink(CTA_PRODUCT.variant)}
             {...EXTERNAL_LINK}
+            event={wineClick(CTA_PRODUCT.variant)}
             className="inline-flex items-center gap-2 rounded-lg bg-white px-7 py-3.5 text-base font-bold text-black transition-colors hover:bg-gray-200"
           >
             {m.wineCta}
-          </a>
+          </TrackedLink>
         </div>
       </div>
     </section>

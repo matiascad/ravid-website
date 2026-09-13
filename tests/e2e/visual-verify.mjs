@@ -1,12 +1,25 @@
 // W7-B VISUAL VERIFY -- read-only audit of the running production build.
 // Captures the four screenshots and measures RTL/LTR, a11y, console and network.
 // It REPORTS. It repairs nothing and writes nothing outside artifacts/screenshots.
+//
+// ⚠ THIS IS A REPORTER, NOT A GATE. It prints JSON and exits 0 whatever it
+//   finds. It has no assertions and cannot fail a build. `npm run e2e` does
+//   NOT run this file, and must not be made to: a script that always exits 0
+//   is exactly the always-green no-op that let an invisible booking button
+//   ship. The gate is `cta-visibility.spec.ts`, which asserts. This file
+//   stays because its MEASUREMENTS are genuinely useful to a human reading a
+//   run — it is a microscope, not a smoke alarm.
+//
+//   Run it by hand, after starting a server:  node tests/e2e/visual-verify.mjs
 import { chromium } from '@playwright/test';
 import { mkdirSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { E2E_BASE_URL } from './e2e.env.mjs';
 
-const BASE = process.env.BASE_URL || 'http://localhost:3477';
+// Was hardcoded to `http://localhost:3477`, a port nothing in this repo ever
+// serves. The address now comes from the one place that defines it.
+const BASE = process.env.BASE_URL || E2E_BASE_URL;
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const SHOTS = path.join(ROOT, 'artifacts', 'screenshots');
 mkdirSync(SHOTS, { recursive: true });

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>RED TEAM — ravid-speaks.com</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#FFFFFF;color:#14202B;font-family:"Segoe UI",Arial,Helvetica,sans-serif;font-size:15px}
+  .w{width:1240px;margin:0 auto;padding:22px}
+  h1{font-size:31px;margin:0 0 6px 0;color:#B3261E;font-weight:800}
+  .src{font-size:13px;color:#5B6B7B;margin-bottom:18px}
+  .ovr{border:2px solid #B3261E;border-radius:10px;padding:16px 18px;display:flex;align-items:center;gap:18px;margin-bottom:20px}
+  .ovr .pct{font-size:42px;font-weight:800;color:#B3261E;min-width:130px;text-align:center}
+  .ovr .mid{flex:1}
+  .ovr .t{font-weight:800;font-size:17px;text-align:center;margin-bottom:8px}
+  .track{height:16px;background:#E7ECF1;border-radius:8px;overflow:hidden;display:flex}
+  .s1{background:#B3261E}.s2{background:#C9781A}.s3{background:#1B7F3F}
+  .chips{margin-top:9px;font-size:13px;color:#33475B;text-align:center}
+  .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px}
+  .card{border:2px solid #D7DEE5;border-radius:10px;padding:14px 15px;position:relative}
+  .card.p0{border-color:#B3261E}.card.p1{border-color:#C9781A}.card.p2{border-color:#7A8A99;background:#FAFBFC}
+  .badge{position:absolute;top:-11px;left:14px;font-size:12px;font-weight:800;color:#FFF;padding:3px 9px;border-radius:10px}
+  .b0{background:#B3261E}.b1{background:#C9781A}.b2{background:#5B6B7B}
+  .ct{font-weight:800;font-size:17.5px;margin:2px 0 3px 0}
+  .cm{font-size:12.5px;color:#5B6B7B;margin-bottom:9px}
+  .row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+  .score{font-size:29px;font-weight:800}
+  .score span{font-size:14px;color:#5B6B7B}
+  .sm{font-size:12.5px;color:#33475B}
+  ul{margin:8px 0 0 0;padding-inline-start:18px}
+  li{font-size:12.8px;margin-bottom:5px;line-height:1.4}
+  .panel{border:2px solid #1B4F82;border-radius:10px;padding:14px 15px;margin-bottom:18px}
+  .pt{font-weight:800;font-size:18px;margin-bottom:10px;color:#1B4F82}
+  table{width:100%;border-collapse:collapse}
+  th{background:#1B3B5C;color:#FFF;font-size:12.5px;padding:8px 10px;text-align:left}
+  td{font-size:12.6px;padding:7px 10px;border-bottom:1px solid #E7ECF1;vertical-align:top}
+  tr:nth-child(even) td{background:#F7F9FB}
+  .r{color:#B3261E;font-weight:800}.o{color:#C9781A;font-weight:800}.g{color:#1B7F3F;font-weight:800}
+  code{font-family:Consolas,monospace;font-size:12px;background:#EEF2F6;padding:1px 4px;border-radius:3px}
+</style>
+</head>
+<body>
+<div class="w">
+
+  <h1>🎯 RED TEAM — what still stands between Ravid and a booking</h1>
+  <div class="src">Probed live on ravid-speaks.com just now (both locales, 404 path, sitemap) + read <code>app/api/lead/route.ts</code> and <code>config/site.ts</code> in the repo. The build is sound; these are <b>funnel</b> defects, not code defects. Attack question asked throughout: <i>"a school principal decides in 90 seconds whether to book him — what stops her?"</i></div>
+
+  <div class="ovr">
+    <div class="mid">
+      <div class="t">SITE QUALITY 92/100 · BOOKING FUNNEL <span class="r">31/100</span> — a beautiful page that cannot currently receive, measure or answer an enquiry</div>
+      <div class="track"><div class="s1" style="width:33%"></div><div class="s2" style="width:39%"></div><div class="s3" style="width:28%"></div></div>
+      <div class="chips">🔴 4 P0 (lead-killing) · 🟡 5 P1 (conversion) · 🟢 4 P2 (polish) &nbsp;·&nbsp; 3 of the P0s are configuration, not code — hours, not days</div>
+    </div>
+    <div class="pct">31<span style="font-size:20px">%</span></div>
+  </div>
+
+  <div class="grid">
+
+    <div class="card p0"><div class="badge b0">🔴 P0-1</div>
+      <div class="ct">📮 every enquiry dies at 503</div>
+      <div class="cm">3 env vars unset on Vercel</div>
+      <div class="row"><div class="score r">10<span>/10 severity</span></div><div class="sm">fix: 15 min · yours</div></div>
+      <ul>
+        <li>Form validates, then returns <b>delivery_unavailable</b>. Honest — but the visitor still leaves without booking</li>
+        <li>Set <code>RESEND_API_KEY</code> · <code>LEAD_TO_EMAIL</code> · <code>LEAD_FROM_EMAIL</code>, then submit one real test</li>
+        <li>🔴 <b>Single point of failure by design</b>: email is the ONLY sink. One bounce, one spam filter = a lost booking nobody knows about</li>
+      </ul>
+    </div>
+
+    <div class="card p0"><div class="badge b0">🔴 P0-2</div>
+      <div class="ct">🗄️ leads are not stored anywhere</div>
+      <div class="cm">no DB, no file, no CRM, no copy</div>
+      <div class="row"><div class="score r">9<span>/10</span></div><div class="sm">fix: ~2h · a wave</div></div>
+      <ul>
+        <li>If Resend fails, or Gmail files it as spam, the enquiry is <b>gone with no trace</b></li>
+        <li>Right architecture: persist first (Vercel KV / Postgres / a sheet), <i>then</i> notify. Delivery becomes best-effort, the record is the truth</li>
+        <li>Also enables: "you have 3 unanswered enquiries" and a real response-time number</li>
+      </ul>
+    </div>
+
+    <div class="card p0"><div class="badge b0">🔴 P0-3</div>
+      <div class="ct">📊 zero measurement</div>
+      <div class="cm">analytics component present, ID unset</div>
+      <div class="row"><div class="score r">9<span>/10</span></div><div class="sm">fix: 20 min · yours</div></div>
+      <ul>
+        <li>Nobody can answer: how many visited · where they stopped · did anyone press "הזמן הרצאה"</li>
+        <li>Without it, every future improvement is taste, not evidence — and the customer's "the old one wasn't good" stays unfalsifiable</li>
+        <li>Minimum: GA4 id + 3 events — <b>cta_click · form_submit · whatsapp_click</b></li>
+      </ul>
+    </div>
+
+    <div class="card p0"><div class="badge b0">🔴 P0-4</div>
+      <div class="ct">📸 the Instagram link may 404</div>
+      <div class="cm"><code>INSTAGRAM_HANDLE = 'ravid_.t'</code></div>
+      <div class="row"><div class="score r">8<span>/10</span></div><div class="sm">fix: 1 line · ask Ravid</div></div>
+      <ul>
+        <li>Two spellings exist across the two source repos: <code>ravid._.t</code> vs <code>ravid_.t</code> — only one is real</li>
+        <li>A dead social link on a memorial page reads as neglect to a first-time visitor</li>
+        <li>One edit at <code>config/site.ts</code> — the URL is derived, so it cannot drift</li>
+      </ul>
+    </div>
+
+    <div class="card p1"><div class="badge b1">🟡 P1-1</div>
+      <div class="ct">🎬 no video of Ravid speaking</div>
+      <div class="cm">the single biggest conversion asset for a speaker</div>
+      <div class="row"><div class="score o">8<span>/10 impact</span></div><div class="sm">fix: content, not code</div></div>
+      <ul>
+        <li>A booker wants to see him hold a room for 60 seconds. Photos cannot do that</li>
+        <li>Even one phone-shot minute from an existing lecture, captioned he+en, outperforms every paragraph on the page</li>
+        <li>Second-best: a 1-page PDF for organizers (bio, topics, durations, tech needs, photo)</li>
+      </ul>
+    </div>
+
+    <div class="card p1"><div class="badge b1">🟡 P1-2</div>
+      <div class="ct">🙋 the speaker is nearly invisible</div>
+      <div class="cm">the page is about Tuval; the booking is of Ravid</div>
+      <div class="row"><div class="score o">7<span>/10</span></div><div class="sm">fix: one section</div></div>
+      <ul>
+        <li>No "who is Ravid" block: his photo, his own words, why he speaks, where he has spoken (IDF, schools, Knesset, media)</li>
+        <li>The 57 lectures / 1000+ soldiers / 1400 blood donations are stated as numbers but never <b>attributed to named institutions</b> — a principal wants one name she recognises</li>
+        <li>Testimonials have no role/organisation on the live page → they read as anonymous</li>
+      </ul>
+    </div>
+
+    <div class="card p1"><div class="badge b1">🟡 P1-3</div>
+      <div class="ct">🔍 invisible to Google as a speaker</div>
+      <div class="cm">metadata exists; structured data does not</div>
+      <div class="row"><div class="score o">7<span>/10</span></div><div class="sm">fix: ~1h</div></div>
+      <ul>
+        <li>No <code>Person</code> / <code>Service</code> / <code>Review</code> JSON-LD → plain blue link, no rich result</li>
+        <li>Canonical + OG say <code>www.</code>; the site actually serves the <b>apex</b> (www redirects) — canonical pointing at a redirect weakens both SEO and link previews</li>
+        <li>Nobody searching "הרצאה לזכר חלל צה״ל" finds a page optimised for that phrase — the copy never uses the words a booker types</li>
+      </ul>
+    </div>
+
+    <div class="card p1"><div class="badge b1">🟡 P1-4</div>
+      <div class="ct">🇬🇧 the English page is half-Hebrew</div>
+      <div class="cm">OPEN 7 + imageAlts</div>
+      <div class="row"><div class="score o">6<span>/10</span></div><div class="sm">fix: ask the family</div></div>
+      <ul>
+        <li>3 unit badges render Hebrew on /en · 6 images serve Hebrew alt text</li>
+        <li>The /en audience is exactly the high-value one: diaspora federations, embassies, hi-tech HQs</li>
+        <li>404 copy is English in both catalogues (OPEN 9) — ⚠️ writing Hebrew there exposes the latent /en 404 regression, fix both together</li>
+      </ul>
+    </div>
+
+    <div class="card p1"><div class="badge b1">🟡 P1-5</div>
+      <div class="ct">🍷 the shop sits inside the funnel</div>
+      <div class="cm">3 outbound links before the form</div>
+      <div class="row"><div class="score o">6<span>/10</span></div><div class="sm">fix: order + tracking</div></div>
+      <ul>
+        <li>Wine links send the visitor to another site <b>immediately before</b> the booking form — the most expensive place to lose them</li>
+        <li>No UTM, no outbound event → the family cannot tell whether the wine section sells anything at all</li>
+        <li>Right move: keep it, but place it <b>after</b> the form, and tag every outbound click</li>
+      </ul>
+    </div>
+
+    <div class="card p2"><div class="badge b2">🟢 P2</div>
+      <div class="ct">🧹 polish + duty of care</div>
+      <div class="cm">cheap, and two are legal hygiene</div>
+      <div class="row"><div class="score g">4<span>/10</span></div><div class="sm">fix: ~1h total</div></div>
+      <ul>
+        <li><b>No confirmation to the sender</b> — an enquirer gets no receipt; add an autoresponse once P0-1 lands</li>
+        <li><b>No privacy line</b> beside a form collecting name, phone, email (Israeli privacy amendment — one sentence + retention period)</li>
+        <li><code>mailto:</code> exposed in the footer = harvesting; route it through the form or obfuscate</li>
+        <li>404 page carries the site title, not "404" · full-scroll weight 1.511 MB on mobile data</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="panel">
+    <div class="pt">🛠️ THE ORDER I WOULD DO IT IN — and who does what</div>
+    <table>
+      <tr><th>#</th><th>ACTION</th><th>WHO</th><th>EFFORT</th><th>WHY THIS ORDER</th></tr>
+      <tr><td class="r">1</td><td>Set the 3 env vars on Vercel, submit one real test enquiry, confirm it lands in the inbox</td><td>you</td><td>15 min</td><td>until this, everything else is decoration</td></tr>
+      <tr><td class="r">2</td><td>GA4 id + 3 events (cta_click · form_submit · whatsapp_click)</td><td>you + 1 delegate</td><td>20 min</td><td>day-1 baseline, or you never know what the fixes did</td></tr>
+      <tr><td class="r">3</td><td>Ask Ravid the 4 questions: Instagram handle · English badge names · Hebrew 404 wording · English alt text</td><td>you</td><td>one message</td><td>unblocks 4 one-edit items at once</td></tr>
+      <tr><td class="o">4</td><td><b>W9 — persist-then-notify</b>: store every lead, email becomes best-effort, autoresponse to the sender</td><td>Claude Code</td><td>~2h</td><td>removes the single point of failure on the only thing the site is for</td></tr>
+      <tr><td class="o">5</td><td><b>W10 — "who is Ravid"</b>: his section, named institutions, attributed testimonials, organizer one-pager</td><td>content + 1 wave</td><td>~2h + his input</td><td>this is what converts a browsing principal into an enquiry</td></tr>
+      <tr><td class="o">6</td><td><b>W11 — findability</b>: JSON-LD (Person/Service/Review), canonical → apex, booker-phrase copy pass, wine section moved after the form + UTM</td><td>Claude Code</td><td>~1.5h</td><td>compounding; worthless before #2 exists to measure it</td></tr>
+      <tr><td class="g">7</td><td>Video minute + privacy line + autoresponse polish</td><td>Ravid + wave</td><td>—</td><td>highest ceiling, needs his footage</td></tr>
+    </table>
+  </div>
+
+</div>
+</body>
+</html>

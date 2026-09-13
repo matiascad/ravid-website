@@ -65,7 +65,12 @@
 //      this repo can check it against that source — the customer's tree is out
 //      of this delegate's reach by rule — so a wrong transcription would compile,
 //      lint, and pass every test. The test pins the order this file declares; it
-//      cannot pin it to the customer's intent.
+//      cannot pin it to the customer's intent. ONE PAIR NOW DEVIATES FROM THAT
+//      TRANSCRIPTION ON PURPOSE (W12-C): `LeadForm` renders before `Wine`,
+//      where the customer's build had wine first. It is the only deliberate
+//      departure on this page, it is argued at its own mount point below, and it
+//      is the one ordering decision here that a reader should challenge on the
+//      merits rather than by checking it against Index.tsx.
 //   2. EVERY SECTION RECEIVES THE WHOLE CATALOGUE, not a slice of it. The
 //      alternative — building `{ heroTitle: m.heroTitle, … }` per section — would
 //      copy each section's key list into this file, a second copy of a fact the
@@ -117,6 +122,7 @@ import { LanguageSwitcher } from '@/components/sections/LanguageSwitcher'
 import { LeadForm } from '@/components/sections/LeadForm'
 import { LecturesPreview } from '@/components/sections/LecturesPreview'
 import { Military } from '@/components/sections/Military'
+import { Speaker } from '@/components/sections/Speaker'
 import { Stats } from '@/components/sections/Stats'
 import { Story } from '@/components/sections/Story'
 import { Testimonials } from '@/components/sections/Testimonials'
@@ -163,20 +169,49 @@ export default async function LocaleHomePage({
         <Hero m={m} locale={locale} />
         <Story m={m} locale={locale} />
         <Military m={m} locale={locale} />
+        {/*
+          W11-B. RENDERS NOTHING TODAY and adds zero bytes to this page — the
+          customer's build carries no bio, credential, venue, video or press
+          mention for Ravid, so `content/speaker.ts` declares none and there is
+          no heading string to put over them. Mounted HERE, and not appended at
+          the end, because this is where the page turns from Tuval (the subject)
+          to Ravid (the speaker, first person, from `lecturesTitle` onward): when
+          the copy exists, activation is ONE edit in Speaker.tsx, not a
+          re-layout. The zero bytes are proved by a SAME-RUN COMPARISON in
+          Speaker.test.tsx — its "adds ZERO bytes to the served page" test — and
+          NOT by a pinned hash: that test renders this page twice in one run
+          against one catalogue, once with the real section and once
+          with this mount replaced by a component that renders nothing — and
+          compares the two HTML strings byte for byte. Nothing is pinned, so
+          sanctioned edits to the page's copy cannot turn it red; only this
+          section emitting a byte can.
+        */}
+        <Speaker m={m} locale={locale} />
         <LecturesPreview m={m} locale={locale} />
         <Stats m={m} locale={locale} />
         <WhatYouGet m={m} locale={locale} />
         <HowItLooks m={m} locale={locale} />
         <Testimonials m={m} locale={locale} />
         <Why m={m} locale={locale} />
+        <LeadForm m={m} locale={locale} />
         {/*
+          W12-C. WINE RENDERS AFTER THE FORM, AND THAT IS THE WHOLE POINT.
+          This page sells ONE thing — a lecture booking — and the wine block is
+          the only outbound link on it. Standing before the form, the page's
+          strongest exit competed with its only conversion and won on position
+          alone. This is the one section pair whose order is an argument rather
+          than a transcription of the customer's build (HONEST LIMIT 1), and it
+          is recorded as such: NOTHING ELSE MOVED, no section was added or
+          removed, and not one string changed. The order is asserted in the
+          RENDERED DOM by __tests__/page.test.tsx, never by the order of these
+          lines.
+
           `Wine` takes NO `locale`, alone among the twelve message-taking
           sections, because it is provably locale-invariant (ledger D-30). Its
           props type says so; passing one anyway would be a compile error. Do not
           "harmonise" this line.
         */}
         <Wine m={m} />
-        <LeadForm m={m} locale={locale} />
       </main>
 
       {/* 13. Outside <main> by HTML semantics, not by reordering. */}

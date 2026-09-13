@@ -18,28 +18,35 @@
 // INVARIANT     There is exactly ONE expression in this file that can put the
 //               user into the state where they are told the enquiry was sent —
 //               the single `setStatus('sent')` — and it is reachable only from
-//               inside `if (response.ok === true)`, i.e. only from a response
-//               this component has read. Every other terminal path (a resolved
-//               response with `ok === false`, a thrown/aborted/timed-out fetch,
-//               a failed required-field check) lands on `'failed'` or
-//               `'invalid'`, and the success copy is not rendered in either.
-//               Success copy has exactly one render site, guarded by
-//               `status === 'sent'`, so "told it was sent" and "observed an ok
-//               response" are the same fact stated once.
+//               `storedId !== null`: an ok response whose BODY carried a
+//               readable, non-blank `id`, which is the route's own evidence
+//               that a record exists (W9-C). Every other terminal path (a
+//               resolved response with `ok === false`, an ok response with no
+//               such id in it, a thrown/aborted/timed-out fetch, a failed
+//               required-field check) lands on `'failed'` or `'invalid'`, and
+//               the success copy is not rendered in either. Success copy has
+//               exactly one render site, guarded by `status === 'sent'`, so
+//               "told it was sent" and "observed the server's evidence that a
+//               record was stored" are the same fact stated once.
 //
 // IMPOSSIBLE    The lie both existing sites tell can no longer be CONSTRUCTED
 //               here. Specifically:
-//               (a) SUCCESS FROM A RESOLVED FAILURE. There is no `setSubmitted`
-//                   after a bare `await fetch(...)`; the only assignment of the
-//                   'sent' status is inside the `response.ok === true` branch.
-//                   Deleting that check does not merely change behaviour — it
-//                   turns the suite red (see the RED proof in the test header),
-//                   so Defect 2 cannot be reintroduced quietly.
+//               (a) SUCCESS FROM A RESOLVED FAILURE, OR FROM A SUCCESS-SHAPED
+//                   NON-EVENT. There is no `setSubmitted` after a bare
+//                   `await fetch(...)`; the only assignment of the 'sent' status
+//                   sits on the `storedId !== null` arm, and `storedId` is
+//                   `null` both for every response that is not ok AND for every
+//                   ok response whose body carries no readable, non-blank `id`.
+//                   Deleting either half does not merely change behaviour — it
+//                   turns the suite red (see the RED proofs in the test header),
+//                   so neither Defect 2 nor the id-less 201 can be reintroduced
+//                   quietly.
 //               (b) A FALLBACK UNREACHABLE FOR HTTP ERRORS. The WhatsApp
 //                   fallback is rendered from the `'failed'` STATUS, not from a
-//                   `catch` block, and both the `ok === false` path and the
-//                   thrown path set that one status. There is no branch that can
-//                   fail without offering it.
+//                   `catch` block, and all three failing paths — `ok === false`,
+//                   an ok response with no stored-lead id in its body, and a
+//                   thrown/aborted fetch — set that one status. There is no
+//                   branch that can fail without offering it.
 //               (c) A SUBMIT THE KEYBOARD CANNOT REACH. This is a real <form>
 //                   with onSubmit and a type="submit" control, so implicit
 //                   submission (Enter in a text field) and native submit both
@@ -60,6 +67,49 @@
 //               (g) ALERT(). No call to `alert` exists in this file; the only
 //                   occurrences of the word are in this header, describing
 //                   Defect 1. Every outcome goes through the live region.
+//               (h) AN EMPTY FALLBACK — a link that renders but carries nothing.
+//                   This one is DERIVED, not merely tested. `'failed'` is
+//                   reachable only after `missingRequired(values).length === 0`,
+//                   and `setValues(EMPTY)` appears exactly once, inside the
+//                   `storedId !== null` branch — so `values.name` and `values.phone`
+//                   are non-empty at every render in which the fallback exists,
+//                   and `buildPrefill` emits a labelled line for each non-empty
+//                   field. Therefore the prefill ALWAYS carries at least the
+//                   name and the phone: a failure cannot produce a bare
+//                   `wa.me` link. The href is also computed during render from
+//                   the live `values` rather than snapshotted at submit time, so
+//                   a correction typed after the failure is carried, not lost.
+//                   W9-D proves the computed EFFECT rather than the identifier:
+//                   its tests read the rendered `href` off the anchor, decode it
+//                   with the platform URL parser, and assert the visitor's
+//                   literal characters — Hebrew and newlines included — come
+//                   back out. Breaking the prefill turns seven of them red (see
+//                   the second RED proof in the test header).
+//
+// W9-F HONEYPOT — THE ONE DELIBERATE CHANGE TO THE SERVED PAGE, stated plainly
+//               because the night-wide gate says the idle render must otherwise
+//               be byte-identical to today with every human-blocked value unset.
+//               It still is. What is NEW is exactly this, and only this, as the
+//               first child of the <form>:
+//
+//                 <div style="display:none">
+//                   <input name="hp_ref" type="text" autocomplete="off"
+//                          tabindex="-1" aria-hidden="true" />
+//                 </div>
+//
+//               ...plus ONE key on the wire: the POST body gains `hp_ref`,
+//               carrying whatever that input holds, which is `''` for every
+//               human. Nothing else moved — no copy, no catalogue key, no link,
+//               no class, no id, no `data-testid`, no ordering of the five real
+//               controls, and no change to any status the visitor can reach.
+//
+//               WHY THE FIELD EXISTS. `app/api/lead` already carries a proven
+//               guard: a `hp_ref` that trims to a non-blank string is answered
+//               with a success-SHAPED, id-less 201 and nothing is stored. Until
+//               now the form did not render the field, so the guard caught
+//               nothing. Absent and empty are both untrapped, which is why the
+//               route could land first and why this addition cannot break a
+//               visitor who was previously fine.
 //
 // CLASS         Closed by DERIVATION for this component's outcome reporting: the
 //               status union is the complete set of states, the success panel has
@@ -72,7 +122,7 @@
 //               derivation would be an ESLint rule over `components/`, which is
 //               outside this delegate's write-set. Owed to the seat.
 //
-// HONEST LIMIT  Seven, stated plainly.
+// HONEST LIMIT  Ten, stated plainly.
 //   1. THE ENDPOINT DOES NOT EXIST YET. `/api/lead` is W5's file and was not
 //      present when this was written. This component proves it CALLS that path
 //      with that body and reads the response correctly; it proves nothing about
@@ -90,7 +140,13 @@
 //      `aria-invalid` and moving focus to the first one; and the PENDING state is
 //      carried by `aria-busy` plus a disabled control, not by text. Adding
 //      `formSending` and `formError` to both catalogues is the single highest-
-//      value follow-up and is the first action owed to the seat.
+//      value follow-up and is the first action owed to the seat. RE-MEASURED by
+//      W9-D, not assumed: a repo-wide grep for `formSending`/`formError` returns
+//      only the three lines of this comment block — the keys are ABSENT from
+//      `i18n/messages.ts`, `messages/he.json` and `messages/en.json` alike. The
+//      one-edit sites are `i18n/messages.ts:292` (schema) plus the matching key
+//      in both catalogues. Until then the failure UX renders `formDirect` and
+//      nothing else in words, which is true but does not say "sending failed".
 //   3. `noValidate` IS DELIBERATE, and it is a trade. The browser's own
 //      constraint bubbles are unstyled, unlocalised by our catalogue, and cannot
 //      be routed into our live region; suppressing them guarantees that every
@@ -116,19 +172,154 @@
 //      `aria-live="polite"`. An assertive region for errors would mean two
 //      regions or a role that changes under the user, both of which are worse.
 //      A polite announcement can be delayed behind other speech.
+//   8. THE HONEYPOT CAN, IN PRINCIPLE, DISCARD A REAL ENQUIRY — AND UNTIL
+//      W14-FIX1 IT COULD ALSO TELL THAT VISITOR IT WAS SENT. IT CAN NO LONGER.
+//      This is the cost of the trap and it is the worst failure this file can
+//      have, so it is stated first among its own details rather than buried.
+//      `/api/lead` reads `hp_ref` and, if it trims to anything at all, answers a
+//      success-shaped 201 having STORED NOTHING — and deliberately WITHOUT an
+//      `id`, because a fabricated id in a 2xx would be evidence of a storage
+//      that did not happen (W9-C). THE CLIENT NOW HONOURS THAT: an ok response
+//      reaches 'sent' only when its body carries a readable, non-blank `id`, so
+//      a trapped enquiry lands on 'failed' like any other failure — the visitor
+//      keeps everything they typed, in the form and in the prefilled WhatsApp
+//      link, and is never told a lead exists that does not. A trapped real
+//      visitor loses a round trip; they do not lose the enquiry, and they are
+//      not lied to. What else is done about it, still, because not being lied to
+//      is worse than not being trapped:
+//        · the field is `display:none` through an INLINE style, and browser
+//          autofill in Chrome, Safari and Firefox skips controls it computes as
+//          not displayed. This is the single largest reduction in the risk, and
+//          it is why the hiding is NOT a utility class — see HONEYPOT_STYLE;
+//        · `autoComplete="off"` asks the browser not to fill it, and the name
+//          `hp_ref` matches no autofill heuristic (those key on `email`, `tel`,
+//          `name`, `organization`, `address` — `hp_ref` looks like nothing);
+//        · `tabIndex={-1}` keeps it out of the keyboard order, so a visitor
+//          tabbing through the form cannot land in it and type;
+//        · it is UNCONTROLLED and read off the DOM only at submit time, so no
+//          line in this component is able to write a value into it.
+//      RESIDUAL, AND NOT MEASURED ANYWHERE IN THIS REPO: a password manager, a
+//      form-filling extension or an assistive tool that ignores both
+//      `display:none` and `autocomplete="off"` would still trip it, and no test
+//      here can observe a real browser extension. What that now costs the
+//      visitor is a needless failure message and a second route to the same
+//      brother, NOT a lost lead presented as a sent one. The route logs every
+//      trapped submission to stderr, so an operator can at least SEE the fault
+//      instead of it being silent. That is mitigation, not proof, and the
+//      residual risk is accepted deliberately rather than claimed away.
+//   9. THE ID IS CHECKED FOR PRESENCE, NEVER FOR SHAPE — a deliberate refusal.
+//      `storedLeadId` accepts any string with one non-blank character and
+//      rejects everything else (absent, `''`, `'   '`, a number, `null`, a body
+//      that is not a JSON object, a body that does not parse). It does NOT
+//      require a 26-character Crockford ULID, and it does NOT import
+//      `parseLeadId`/`LEAD_ID_LENGTH` from `@/lib/leads/types`. Two reasons,
+//      both about not making this file wrong later:
+//        · `parseLeadId` returns a BRANDED `LeadId`, whose entire meaning (see
+//          that file's INVARIANT) is "this identifies a record in our store".
+//          Minting that brand on the client out of an untrusted network body
+//          would launder a string a stranger controls into the one type the repo
+//          uses to mean the opposite. The brand's value is repo-wide; spending
+//          it here to save a regex would be the expensive trade;
+//        · the id's ALPHABET is a storage implementation detail this component
+//          has no stake in — it never parses, sorts, displays or re-sends the
+//          id. If the route ever moved from ULID to uuid, a shape check here
+//          would turn every honest success into a failure, and NO test in this
+//          repo would see it: the client suite mocks the boundary and the route
+//          suite never renders this component. The published contract is
+//          "a 2xx carrying an id is a stored record, the id-less 2xx is the
+//          decoy", and presence is exactly what this file checks.
+//      THE COST, STATED: a 2xx carrying a well-formed LIE — `{"ok":true,
+//      "id":"x"}` from a proxy or a future bug — still renders success. This
+//      component can tell EVIDENCE from NO EVIDENCE; it cannot tell true
+//      evidence from forged evidence, and nothing on a client ever can.
+//  10. ⚠️ CLOSED — kept as history because it is quoted in the W14-FIX1 report.
+//      It said the failure reason for an id-less 2xx was `http_other`, which
+//      lost the one distinction an operator most needs, because
+//      `FORM_FAIL_REASONS` was a closed union of eight with no member for "our
+//      own route answered ok and stored nothing", and `@/lib/analytics/events`
+//      was outside W14-FIX1's write-set so no member was invented. That was
+//      TRUE when written and is FALSE NOW: W14-FIX5 added `ok_without_id` to
+//      `FORM_FAIL_REASONS` and pointed `OK_WITHOUT_ID_REASON` below at it, so a
+//      honeypot that has begun eating real enquiries no longer reaches GA4 under
+//      the same name as a 502 at a proxy. What REMAINS true is limit 9's cost: a
+//      2xx carrying a forged id still renders success, and no client can tell
+//      true evidence from forged evidence.
 //
 // CONTRACTS HONOURED: props-driven (no getMessages call here — this is a client
 // component and the catalogue load stays on the server); zero hardcoded copy and
 // zero Hebrew codepoints, comments included; logical CSS only (no ml/mr/pl/pr/
 // left/right/text-left/text-right); next/image only, never a CSS background; one
 // named export, no default; no `any`, no non-null assertion, no `as` cast.
+//
+// W10-B ANALYTICS · Five `emit()` calls sit in `handleSubmit` and three on the
+// contact anchors. NONE of them changes when or whether a fetch happens, a
+// status is set or a field is cleared: every one is placed AFTER the state
+// change it reports. `emit()` swallows, so a throwing tracker cannot reach the
+// submit path - asserted, not assumed, in `__tests__/analytics-wiring.test.tsx`.
+// The funnel is closed: one attempt (after the double-submit guard, before
+// validation) always closes as exactly one `form_success` or one `form_fail`.
+// HONEST LIMIT (analytics) The reason for a network failure is ONE name for
+// four causes - offline, DNS, CORS and the `AbortSignal.timeout` abort all land
+// in the same `catch` with nothing this component inspects to separate them.
+// No lead field reaches any event: `failReason` is handed a number.
+//
+// W13-A PRIVACY NOTICE · THE PATH IS BUILT AND IT RENDERS NOTHING. `<PrivacyNotice
+// m={m} />` sits after the fields, and the form's `aria-describedby` names it —
+// but only when the catalogue answers all three of `privacyTitle`, `privacyData`
+// and `privacyRetention`, and TODAY IT ANSWERS NONE. So the component returns
+// null, `formDescribedBy` is exactly `STATUS_ID`, and the idle page is byte-for-
+// byte what it was: MEASURED, 4981 characters, sha256 93977daad62b4c4468c400b2f
+// 08532d2773d6c677fa7f9dc4be45417b701b8cb, identical before and after and in both
+// locales. The `Partial<PrivacyNoticeText>` on the props type is why no page or
+// component will need editing when the answer arrives.
+// HONEST LIMIT (privacy) A VISITOR IS TOLD NOTHING TODAY about what becomes of
+// the name, phone, email, organisation and message they hand over, and this file
+// cannot fix that: a retention period and a non-sharing promise are facts only
+// Ravid knows, and inventing them would be a lie told to a bereaved stranger
+// about their own data. The refusal is recorded in full in PrivacyNotice.tsx.
+//
+// W14-FIX1 · AN OK STATUS IS NOT A STORED LEAD. THE ONE BEHAVIOUR CHANGE, stated
+// plainly. Before: success was decided on `response.ok === true` alone, so the
+// route's id-less honeypot 201 — which stores nothing, and which any autofill,
+// password manager, translation tool or accessibility extension that writes into
+// `hp_ref` can trigger for a REAL visitor — rendered the success panel and
+// cleared what they had typed. The enquiry was gone and they were told the
+// opposite: Defect 2 wearing a 2xx. After: `storedLeadId(response)` must return
+// a non-blank string id or the submit takes the EXISTING failure path, which
+// clears nothing. The route is unchanged and was already right; this is the
+// client finally consuming the invariant W9-C paid for. The idle render, the
+// posted body, the five controls, the hidden `hp_ref` and every failure UX are
+// untouched — the only response that behaves differently is a 2xx without an id,
+// which nothing in the repo produces except the trap.
+// KNOWN RED, OUTSIDE THIS FIX'S WRITE-SET AND NOT REPAIRED HERE: three tests in
+// `components/sections/__tests__/analytics-wiring.test.tsx` and
+// `components/sections/__tests__/analytics-unset.test.tsx` mock a 200 whose body
+// is `'{}'` and assert the success panel. They encode the defect above, and each
+// needs its mocked body changed to the route's real one — `{"ok":true,"id":
+// "<26 chars>"}`. Measured green before this change and red after; see the
+// W14-FIX1 report for the three line numbers and the exact replacement.
 // ─────────────────────────────────────────────────────────────────────────────
 
 'use client';
 
 import Image from 'next/image';
-import { useRef, useState, type FormEvent } from 'react';
+import { useRef, useState, type CSSProperties, type FormEvent } from 'react';
 
+import {
+  PrivacyNotice,
+  PRIVACY_NOTICE_ID,
+  resolvePrivacyNotice,
+  type PrivacyNoticeText,
+} from '@/components/sections/PrivacyNotice';
+import { emit } from '@/components/sections/TrackedLink';
+import {
+  formFail,
+  formSubmitAttempt,
+  formSuccess,
+  instagramClick,
+  whatsappClick,
+  type FormFailReason,
+} from '@/lib/analytics/events';
 import {
   INSTAGRAM_HANDLE,
   INSTAGRAM_URL,
@@ -160,7 +351,17 @@ type LeadFormMessages = Pick<
   | 'formSuccessDesc'
   | 'formDirect'
   | 'required'
->;
+> &
+  /**
+   * W13-A. The privacy notice's three keys, OPTIONAL because they do not exist
+   * in `Messages` yet — see components/sections/PrivacyNotice.tsx. `Partial`, not
+   * `Pick`, is the whole trick: `app/[locale]/page.tsx` already hands this
+   * component the entire `getMessages(locale)` object, so the day the catalogue
+   * and its schema gain these keys they arrive here with NO edit to this file
+   * and NO edit to the page. Today all three are absent, `resolvePrivacyNotice`
+   * returns null, and the notice is worth zero bytes.
+   */
+  Partial<PrivacyNoticeText>;
 
 type LeadFormProps = {
   m: LeadFormMessages;
@@ -180,10 +381,13 @@ type LeadFormProps = {
  *               was made and none is claimed.
  *   failed      the direct-contact fallback is announced, with a WhatsApp deep
  *               link prefilled from what the user typed. Reached from a resolved
- *               response with `ok === false` AND from a thrown/aborted fetch —
- *               the same state, so no failure mode can miss the fallback.
+ *               response with `ok === false`, from an OK RESPONSE THAT CARRIED
+ *               NO STORED-LEAD ID (the honeypot decoy, and any 2xx whose body
+ *               cannot be read), AND from a thrown/aborted fetch — one state, so
+ *               no failure mode can miss the fallback, and none of them clears
+ *               what the visitor typed.
  *   sent        and ONLY here: `formSuccess` + `formSuccessDesc`. Reachable from
- *               exactly one assignment, inside `if (response.ok === true)`.
+ *               exactly one assignment, on the `storedId !== null` arm.
  */
 type Status = 'idle' | 'submitting' | 'invalid' | 'failed' | 'sent';
 
@@ -219,6 +423,42 @@ const REQUEST_TIMEOUT_MS = 15000;
 
 /** The W6 asset contract. Decorative: `fill` + empty alt + aria-hidden wrapper. */
 const BACKGROUND_SRC = '/images/form-bg-tank.webp';
+
+/**
+ * THE HONEYPOT FIELD NAME — this component's half of the cross-delegate contract
+ * published by `app/api/lead/route.ts`, whose guard reads this exact key off the
+ * raw body BEFORE validation and discards any submission whose value trims to
+ * something. Stated ONCE here and referenced twice below — the input's `name` and
+ * the key on the wire — so the two can never drift into a trap that catches
+ * nothing. The route restates the literal independently, as does the suite; three
+ * independent spellings that must agree is the point, and a rename here turns the
+ * form's Law-8 test red rather than quietly disarming the guard.
+ */
+const HONEYPOT_NAME = 'hp_ref';
+
+/**
+ * AN INLINE STYLE, NOT A UTILITY CLASS, AND THE CHOICE IS LOAD-BEARING.
+ *
+ * A Tailwind class that resolves to nothing EMITS nothing — the `bg-gold` shape,
+ * where every gate stayed green while the button was invisible. Here that failure
+ * runs the other way and is worse: an `sr-only` that ever stopped resolving would
+ * put a bare, unlabelled text box named `hp_ref` at the top of a bereaved
+ * family's booking form, and no test in this repo would see it, because jsdom
+ * loads no stylesheet. An inline style has no stylesheet to fail to load, and
+ * jsdom resolves it — so `display: none` here is a MEASURED fact in the suite
+ * (`toBeVisible()` is false, `getComputedStyle().display` is `'none'`) rather
+ * than an unverifiable claim about a class name.
+ *
+ * `display: none` over the classic off-screen `position:absolute; inset-inline-
+ * start:-9999px`: off-screen positioning cannot be verified in jsdom at all (no
+ * layout is computed), and — the deciding reason — browser autofill skips a
+ * control it computes as not displayed but will happily fill one that is merely
+ * parked off-screen. See HONEST LIMIT 8: trapping a real visitor is the expensive
+ * failure here, catching one fewer bot is the cheap one, and this is which side
+ * of that trade the file takes. The cost, stated: a bot sophisticated enough to
+ * read computed styles skips this field. Most are not.
+ */
+const HONEYPOT_STYLE: CSSProperties = { display: 'none' };
 
 const TITLE_ID = 'lead-form-title';
 const STATUS_ID = 'lead-form-status';
@@ -271,6 +511,83 @@ function buildPrefill(m: LeadFormMessages, values: Values): string {
   return lines.join('\n');
 }
 
+/**
+ * THE KEY THE ROUTE PUTS ITS EVIDENCE IN. Restated here rather than imported,
+ * for the same reason `HONEYPOT_NAME` is: it is one half of a cross-process
+ * contract carried on the wire (`Response.json({ ok: true, id }, 201)` in
+ * `app/api/lead/route.ts`), and a client that read the server's own constant
+ * would agree with it no matter what it said. The suite spells it a third time.
+ */
+const LEAD_ID_KEY = 'id';
+
+/**
+ * The stored-lead id this response carries, or `null` when it carries none.
+ *
+ * `null` IS THE WHOLE POINT. `app/api/lead` answers a trapped submission with a
+ * success-shaped, success-STATUSED 201 that deliberately omits `id`, having
+ * stored nothing — it refuses to mint a decoy precisely so that an id in a 2xx
+ * means a record exists. This function is the client half of that invariant: it
+ * returns a string only when the body is a JSON object carrying `id` as a string
+ * with at least one non-blank character, and `null` for every other shape,
+ * including a body that does not parse at all. Nothing below throws: a 2xx with
+ * an unreadable body is a failure, not an exception, so it lands on the failure
+ * STATUS rather than in the `catch` that reports `network`.
+ *
+ * PRESENCE, NOT SHAPE, AND NOT `parseLeadId` — see HONEST LIMIT 9 for the two
+ * reasons and for what that costs.
+ */
+async function storedLeadId(response: { json: () => Promise<unknown> }): Promise<string | null> {
+  let body: unknown;
+  try {
+    body = await response.json();
+  } catch {
+    return null;
+  }
+  if (typeof body !== 'object' || body === null || !(LEAD_ID_KEY in body)) return null;
+  const id: unknown = body[LEAD_ID_KEY];
+  if (typeof id !== 'string' || id.trim().length === 0) return null;
+  return id;
+}
+
+/**
+ * THE REASON REPORTED WHEN A 2xx CARRIED NO ID — no longer a stand-in.
+ *
+ * `FORM_FAIL_REASONS` now carries `ok_without_id`, a member that says exactly
+ * what this branch observed: our own route answered ok and stored nothing. It
+ * was `http_other` — the catalogue's totality member for a status it does not
+ * name — for as long as `@/lib/analytics/events` sat outside the fixing
+ * delegate's write-set; W14-FIX5 added the member and pointed this constant at
+ * it, and the distinction now survives to the boundary. See HONEST LIMIT 10.
+ */
+const OK_WITHOUT_ID_REASON: FormFailReason = 'ok_without_id';
+
+/**
+ * WHY A NON-OK RESPONSE FAILED, named from the ONE thing the component actually
+ * has: `response.status`.
+ *
+ * Total over `number` by construction — the `default` is not laziness, it is the
+ * only honest answer for a status this site does not produce (a 502 from a proxy
+ * in front of the route). Every member it can return is in `FORM_FAIL_REASONS`,
+ * so this function cannot name a reason the catalogue has not sanctioned, and it
+ * cannot read a lead field: it is handed a number and nothing else.
+ */
+function failReason(status: number): FormFailReason {
+  switch (status) {
+    case 413:
+      return 'http_413';
+    case 422:
+      return 'http_422';
+    case 429:
+      return 'http_429';
+    case 500:
+      return 'http_500';
+    case 503:
+      return 'http_503';
+    default:
+      return 'http_other';
+  }
+}
+
 /* ── Component ────────────────────────────────────────────────────────────── */
 
 export function LeadForm({ m, locale }: LeadFormProps) {
@@ -288,16 +605,39 @@ export function LeadForm({ m, locale }: LeadFormProps) {
   const nameRef = useRef<HTMLInputElement>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
 
+  /**
+   * The honeypot, read off the DOM rather than held in state — UNCONTROLLED on
+   * purpose, and this is not a shortcut.
+   *
+   * A controlled input only learns of a write that React saw as an event, and it
+   * REVERTS anything else on the next render. A crude bot that assigns
+   * `input.value = 'x'` without dispatching an `input` event would therefore have
+   * its own fill erased by the very re-render that follows, and the trap would
+   * catch nothing. Reading `.value` at submit time catches both that bot and the
+   * one that types properly. It also means this component holds no state it could
+   * accidentally write into the field — see HONEST LIMIT 8.
+   */
+  const honeypotRef = useRef<HTMLInputElement>(null);
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (inFlight.current === true) return;
+
+    // THE FUNNEL OPENS HERE, and here is deliberate. After the double-submit
+    // guard, so a second click on an in-flight form reports NOTHING and the
+    // "exactly one fetch" invariant has an exactly-one-attempt twin; BEFORE
+    // validation, because a visitor who pressed submit with an empty phone has
+    // submitted the form. Every attempt therefore closes as exactly one
+    // `form_success` or one `form_fail` — including the client-side one below.
+    emit(formSubmitAttempt());
 
     const missingNow = missingRequired(values);
     if (missingNow.length > 0) {
       // No request is made, and none is claimed.
       setMissing(missingNow);
       setStatus('invalid');
+      emit(formFail('client_invalid'));
       if (missingNow.includes('name')) nameRef.current?.focus();
       else phoneRef.current?.focus();
       return;
@@ -321,30 +661,70 @@ export function LeadForm({ m, locale }: LeadFormProps) {
           organization: values.organization.trim(),
           message: values.message.trim(),
           locale,
+          // The honeypot, exactly as the DOM holds it. NOT trimmed and NOT
+          // defaulted to a literal: the route decides what counts as trapped,
+          // and trimming here would hand it a blank for a field a bot had
+          // filled with spaces. `?? ''` covers only the unreachable case of the
+          // ref never attaching, and it fails OPEN — an unfilled honeypot lets
+          // a real enquiry through, which is the safe direction for this site.
+          [HONEYPOT_NAME]: honeypotRef.current?.value ?? '',
         }),
         signal: timeoutSignal(),
       });
 
-      // ── THE ONE CHECK THAT SEPARATES THIS FILE FROM DEFECT 2 ──────────────
-      // A resolved fetch is NOT a delivered lead. `fetch` settles happily on
-      // 404, 422 and 500. Only an ok response may reach 'sent'.
-      if (response.ok === true) {
+      // ── THE TWO CHECKS THAT SEPARATE THIS FILE FROM DEFECT 2 ──────────────
+      // 1. A RESOLVED FETCH IS NOT A DELIVERED LEAD. `fetch` settles happily on
+      //    404, 422 and 500, which is the shape the customer's site got wrong.
+      // 2. AN OK STATUS IS NOT ONE EITHER. `app/api/lead`'s honeypot guard
+      //    answers a success-shaped, id-less 201 and stores NOTHING; it refuses
+      //    to mint a decoy id so that an id in a 2xx MEANS a stored record. The
+      //    evidence is therefore in the BODY, not on the status line, and the
+      //    body is what may reach 'sent'. Anything a browser extension, password
+      //    manager or translation tool writes into `hp_ref` arrives here as an
+      //    id-less 201 and is treated as the failure it is.
+      const ok = response.ok === true;
+      const storedId = ok ? await storedLeadId(response) : null;
+
+      if (storedId === null) {
+        // ONE failure site for both halves. `setValues(EMPTY)` is NOT here and
+        // is nowhere on this arm: the visitor keeps every character they typed,
+        // in the form and in the prefilled WhatsApp link the failure renders.
+        setStatus('failed');
+        emit(formFail(ok ? OK_WITHOUT_ID_REASON : failReason(response.status)));
+      } else {
         setValues(EMPTY);
         setStatus('sent');
-      } else {
-        setStatus('failed');
+        emit(formSuccess());
       }
     } catch {
       // Network down, DNS failure, CORS, abort, timeout. Same destination as an
       // HTTP error: the fallback is reachable from every failure, not just this
       // branch. That is exactly the shape the customer's site got wrong.
       setStatus('failed');
+      // ONE reason for ONE branch. Offline, DNS, CORS and the abort from
+      // `AbortSignal.timeout` all arrive here with nothing this component
+      // inspects to tell them apart, so the catalogue does not pretend to.
+      emit(formFail('network'));
     } finally {
       inFlight.current = false;
     }
   }
 
   const busy = status === 'submitting';
+
+  /**
+   * W13-A. THE FORM'S DESCRIPTION, DERIVED — never two strings kept in step.
+   *
+   * The live region has always described this form. When (and only when) the
+   * catalogue answers all three privacy keys, the notice's id joins it, so a
+   * screen-reader user hears what is collected and how long it is kept on entering
+   * the form. The presence test is `resolvePrivacyNotice` — the SAME call the
+   * notice itself makes — so the id named here and the element on the page cannot
+   * disagree. With the keys unset this is `STATUS_ID` and nothing else, which is
+   * exactly the attribute the page served before this line existed.
+   */
+  const formDescribedBy =
+    resolvePrivacyNotice(m) === null ? STATUS_ID : `${STATUS_ID} ${PRIVACY_NOTICE_ID}`;
 
   return (
     <section
@@ -397,6 +777,9 @@ export function LeadForm({ m, locale }: LeadFormProps) {
               <a
                 data-testid="form-fallback-whatsapp"
                 href={whatsappLink(buildPrefill(m, values))}
+                onClick={() => {
+                  emit(whatsappClick());
+                }}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-lg border border-gold bg-black/40 px-4 py-2.5 text-sm font-semibold text-gold transition-colors duration-200 hover:bg-black/60"
@@ -416,9 +799,32 @@ export function LeadForm({ m, locale }: LeadFormProps) {
               onSubmit={handleSubmit}
               noValidate
               aria-busy={busy}
-              aria-describedby={STATUS_ID}
+              aria-describedby={formDescribedBy}
               className="space-y-4"
             >
+              {/*
+                THE HONEYPOT. Not a field, not for the visitor, and deliberately
+                without a label or any user-facing text: `app/api/lead` discards
+                any submission that arrives with `hp_ref` non-blank. Invisible to
+                eyes (inline `display:none` — see HONEYPOT_STYLE), absent from
+                the accessibility tree (`display:none` already removes it;
+                `aria-hidden` states the intent and satisfies the published
+                contract), and out of the keyboard order (`tabIndex={-1}`, which
+                is also what keeps `aria-hidden` legal here — an aria-hidden
+                subtree may contain no focusable node). It renders first so a bot
+                that fills fields in document order meets it first.
+              */}
+              <div style={HONEYPOT_STYLE}>
+                <input
+                  ref={honeypotRef}
+                  name={HONEYPOT_NAME}
+                  type="text"
+                  autoComplete="off"
+                  tabIndex={-1}
+                  aria-hidden="true"
+                />
+              </div>
+
               <div>
                 <label
                   htmlFor={FIELD_IDS.name}
@@ -545,6 +951,19 @@ export function LeadForm({ m, locale }: LeadFormProps) {
             </form>
 
             {/*
+              W13-A THE PRIVACY NOTICE. Rendered unconditionally and DELIBERATELY:
+              the component itself decides, from the catalogue, whether there is
+              anything to say, so this call site carries no second copy of that
+              rule. Today the three keys are unanswered and this renders NOTHING
+              — not an empty box, not a heading, not one byte. It sits after the
+              fields and before the direct-contact block because that is where a
+              visitor is when they have typed their details and have not yet
+              submitted them, and it is announced from the form's
+              `aria-describedby` rather than relying on reading order.
+            */}
+            <PrivacyNotice m={m} />
+
+            {/*
               The standing direct-contact block. Hidden while `failed`, because
               the fallback above says the same thing with the user's own details
               prefilled — one fact, one place, never two WhatsApp links at once.
@@ -556,6 +975,9 @@ export function LeadForm({ m, locale }: LeadFormProps) {
                   <a
                     data-testid="form-direct-whatsapp"
                     href={whatsappLink()}
+                    onClick={() => {
+                      emit(whatsappClick());
+                    }}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-black/40 px-4 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:border-white"
@@ -565,6 +987,9 @@ export function LeadForm({ m, locale }: LeadFormProps) {
                   <a
                     data-testid="form-direct-instagram"
                     href={INSTAGRAM_URL}
+                    onClick={() => {
+                      emit(instagramClick());
+                    }}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-black/40 px-4 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:border-white"

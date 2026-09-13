@@ -91,6 +91,7 @@ import {
   ogImageUrl,
   siteOrigin,
 } from '@/lib/seo'
+import { JSON_LD_SCRIPT_TYPE, jsonLdFor } from '@/lib/seo/jsonld'
 
 import '../globals.css'
 
@@ -203,6 +204,19 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} dir={LOCALE_DIRECTION[locale]} className={heebo.variable}>
       <body>
+        {/* W12-A: the ONLY structured-data block in this project. Its text is
+            built by `@/lib/seo/jsonld`, which restates facts that already have
+            one home and escapes every `<`, so a catalogue string cannot close
+            this element. It is mounted in <body> rather than <head> because
+            Next's Metadata API has no JSON-LD field and Google reads either.
+            `dangerouslySetInnerHTML` is required — React would HTML-escape a
+            text child and hand the crawler `&quot;` instead of JSON. */}
+        <script
+          type={JSON_LD_SCRIPT_TYPE}
+          dangerouslySetInnerHTML={{
+            __html: jsonLdFor(locale, metadataCopy(getMessages(locale))),
+          }}
+        />
         {children}
         {/* W5-B: the fix for the old repo's measured defect - Analytics.tsx
             existed and was imported 0 times across 11 files. It renders null

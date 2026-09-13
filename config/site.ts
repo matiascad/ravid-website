@@ -43,6 +43,12 @@
 //               config/__tests__ directory in this repo (measured, not assumed),
 //               so `mailtoLink()` is proved only by the compiler and by the
 //               Footer test that will assert its output once Footer calls it.
+//               `wineShopLink()` (W12-C) is the one exception, and only at one
+//               remove: no test here calls it, but Wine.test.tsx parses the
+//               href it produces back off the RENDERED anchor. So it is proved
+//               THROUGH a call site, for the four variants that call site uses —
+//               never by a test that re-runs the builder and compares the answer
+//               to itself.
 //
 // SOURCE OF ALL SEEDS: `ravid_website1` (the customer's own newest build), file
 // and line recorded per value. The one exception is SITE_URL — see its comment.
@@ -100,6 +106,61 @@ export type WineVariant = keyof typeof WINE_URLS;
 
 // OPEN 5 — one-edit item. NOT a repo fact: zero occurrences in EITHER repo. Only source: REBUILD_PLAN_v1.00.md §7 Q5 (Mati's own document). Answering this changes THIS LINE ONLY.
 export const SITE_URL = 'https://www.ravid-speaks.com' as const;
+
+/* ── Wine shop attribution (UTM) — W12-C ──────────────────────────────────── */
+
+/**
+ * THE UTM VALUES, stated once. Two params, both FACTUAL: they say where the
+ * visitor came from and that they arrived by following an ordinary link. There
+ * is no `utm_campaign` below and that is a DECISION, not an omission — there is
+ * no campaign. This is a permanent page, not a promotion with a start and an
+ * end, and a campaign name would be the site asserting a thing that does not
+ * exist. Same reasoning bans `cpc`, `email` or `social` as the medium.
+ *
+ * WHAT THIS IS ACTUALLY FOR, and why it is not new surveillance: every outbound
+ * shop link on this site carries `rel="noopener noreferrer"` (Wine.tsx), and
+ * `noreferrer` STRIPS the `Referer` header — so without these params the shop
+ * records the memorial site's visitors as `(direct)`. These two values restore
+ * exactly the fact a plain link would already have told the shop, and nothing
+ * more: the host, and that it was a link. They carry no identity, no page path,
+ * no session, no memorial fact.
+ *
+ * It is deliberately NOT part of `WINE_URLS`: those four lines are the
+ * customer's own shop addresses (OPEN 4, one edit each). Attribution is this
+ * site's fact about itself, not the shop's, so it lives on its own.
+ */
+export const WINE_UTM = {
+  /** DERIVED from SITE_URL — answering OPEN 5 moves this too, by construction. */
+  utm_source: new URL(SITE_URL).host,
+  /** An ordinary link from one site to another. The boring, true word for it. */
+  utm_medium: 'referral',
+} as const;
+
+/**
+ * The ONE param name that carries which wine was pressed. Named here, exported,
+ * and read back by the test off the rendered anchor — so the test states the
+ * VARIANT it expects at each position without restating the param's spelling.
+ */
+export const WINE_UTM_VARIANT_PARAM = 'utm_content' as const;
+
+/**
+ * The ONLY way to build an outbound wine-shop href — the same shape, and the
+ * same reason, as `whatsappLink()` and `mailtoLink()` above. No section may
+ * concatenate a `?utm_…` by hand, and none may write four of them.
+ *
+ * `URL`/`searchParams`, never string concatenation: a shop URL that one day
+ * arrives with a query of its own (or a fragment) must gain these params, not a
+ * second `?`. The base URL's percent-encoded path is passed through untouched —
+ * measured, not assumed (`new URL(raw).toString() === raw` for all four).
+ */
+export function wineShopLink(variant: WineVariant): string {
+  const url = new URL(WINE_URLS[variant]);
+  for (const [key, value] of Object.entries(WINE_UTM)) {
+    url.searchParams.set(key, value);
+  }
+  url.searchParams.set(WINE_UTM_VARIANT_PARAM, variant);
+  return url.toString();
+}
 
 /* ── i18n ─────────────────────────────────────────────────────────────────── */
 

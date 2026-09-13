@@ -71,6 +71,15 @@
 //      the server). The test therefore proves the portrait is the one image that
 //      is not lazy — dropping `priority` turns that red — but it cannot prove the
 //      preload link, and it cannot prove the image is in fact the LCP element.
+//      W13-C RE-MEASURED THIS ON THE SERVED BYTES and it holds: the prerendered
+//      `/he` carries 26 `<img>`, exactly one without `loading="lazy"` (this
+//      portrait), and that one carried NO `fetchpriority` until this delegate
+//      added the explicit prop. `fetchPriority` IS separately observable, so the
+//      test now asserts it on the rendered element — that is a stronger claim
+//      than "not lazy", and it does NOT replace it.
+//      STILL NOT PROVED HERE: that this portrait is in fact the LCP ELEMENT.
+//      That needs a real browser with a throttled mobile profile. W13-C could not
+//      run one and recorded LCP as NOT-MEASURED; W14-B owns it.
 //      Related: `fill` makes next/image write physical `left/right` INLINE STYLES
 //      (all four insets zero). They are symmetric, so they are direction-safe,
 //      but they are next/image's markup, not this file's, and the test's
@@ -85,10 +94,21 @@
 //      own build applies it (ravid_website1/src/components/HeroSection.tsx:48).
 //      The test asserts the class reaches exactly that one list item, but jsdom
 //      computes no styles, so nothing here proves the rendered colour.
+//
+// W10-B ANALYTICS · Both hero CTAs are `TrackedLink`, not `<a>`. This section
+// stays a SERVER component: only the anchor crosses the client boundary, and an
+// `onClick` has no HTML serialisation, so the markup a visitor receives is
+// unchanged (measured by hash, W10-B report). The two CTAs report DIFFERENT
+// identities - `hero_book` and `hero_story` - which is the whole reason the
+// identity field exists.
+// HONEST LIMIT (analytics) The click is reported; the browser reaching the form
+// anchor is not observed by any test in this repository. W14-B owns that.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import Image from 'next/image'
 
+import { TrackedLink } from '@/components/sections/TrackedLink'
+import { ctaClick } from '@/lib/analytics/events'
 import { anchor, SECTION_IDS, type Locale } from '@/config/site'
 import { SOURCE_LOCALE, type Messages } from '@/i18n/messages'
 
@@ -204,6 +224,14 @@ export function Hero({ m, locale }: HeroProps) {
           alt={m.imageAlts[PORTRAIT_KEY]}
           fill
           priority
+          // `priority` alone emits NO fetchpriority attribute on next@15.5.25 —
+          // MEASURED on the rendered bytes, not assumed: see HONEST LIMIT 5 and
+          // W13-C. It only suppresses `loading="lazy"` and adds the preload link,
+          // and a preloaded image still enters Chrome's queue at image priority,
+          // behind the nine scripts and two stylesheets this page also requests.
+          // This prop is what raises THIS fetch — and only this one — to High.
+          // It is the one image on the page that may carry it.
+          fetchPriority="high"
           sizes="100vw"
           className="object-cover opacity-60"
         />
@@ -259,18 +287,20 @@ export function Hero({ m, locale }: HeroProps) {
         </ul>
 
         <div className="flex flex-wrap justify-center gap-3.5">
-          <a
+          <TrackedLink
             href={anchor(SECTION_IDS.form)}
+            event={ctaClick('hero_book')}
             className="inline-flex items-center gap-2 rounded-lg bg-secondary px-7 py-3.5 text-base font-bold text-secondary-foreground transition-all duration-200 hover:bg-primary"
           >
             {m.heroCta}
-          </a>
-          <a
+          </TrackedLink>
+          <TrackedLink
             href={anchor(SECTION_IDS.story)}
+            event={ctaClick('hero_story')}
             className="inline-flex items-center gap-2 rounded-lg border border-border bg-transparent px-7 py-3.5 text-base font-semibold text-foreground transition-all duration-200 hover:border-primary"
           >
             {m.heroStory}
-          </a>
+          </TrackedLink>
         </div>
       </div>
     </section>

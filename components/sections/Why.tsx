@@ -86,10 +86,16 @@
 //      shell), and a section that re-derived it would be a second copy of that
 //      fact. The test asserts this INVARIANCE rather than a difference that does
 //      not exist.
+//
+// W10-B ANALYTICS · The closing CTA is a `TrackedLink` reporting `why_book`.
+// Server component unchanged; markup byte-identical (hash-measured).
+// HONEST LIMIT (analytics) Reports the press, not the arrival at the form.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import Image from 'next/image';
 
+import { TrackedLink } from '@/components/sections/TrackedLink';
+import { ctaClick } from '@/lib/analytics/events';
 import { anchor, SECTION_IDS, type Locale } from '@/config/site';
 import type { Messages } from '@/i18n/messages';
 
@@ -156,12 +162,13 @@ export function Why({ m }: WhyProps) {
         </ul>
 
         <div className="mt-2 text-center">
-          <a
+          <TrackedLink
             href={FORM_HREF}
+            event={ctaClick('why_book')}
             className="inline-flex items-center gap-2 rounded-lg bg-secondary px-7 py-3.5 text-base font-bold text-secondary-foreground transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary"
           >
             {m.whyCta}
-          </a>
+          </TrackedLink>
         </div>
       </div>
     </section>

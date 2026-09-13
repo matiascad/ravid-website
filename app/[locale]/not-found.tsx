@@ -151,12 +151,101 @@
 //                  [locale] segment and is what /he/<anything> and /en/<anything>
 //                  now render, via app/[locale]/[...rest]/page.tsx. Verified over
 //                  HTTP against the production build, not assumed.
+//               9. ⚠️ W13-B: WHAT THE `metadata` EXPORT IS NOT PROVED TO DO.
+//                  It was probed on a DEV server (`next dev`, port 3987): a
+//                  sentinel title was exported, /he/nope and /en/nope were
+//                  fetched, and both returned the sentinel. That is a real
+//                  response, not a declaration. But `next build` is forbidden to
+//                  this delegate, so it is NOT proved on a PRODUCTION build, and
+//                  /_not-found (the prerendered root 404, which IS in
+//                  prerender-manifest.json) was not re-measured at all - a
+//                  prerendered 404 takes whatever title the build baked in. If a
+//                  production 404 still shows the memorial page's title, this
+//                  export is the file to look at first, and the answer is
+//                  probably `app/global-not-found.tsx` (see app/not-found.tsx
+//                  HONEST LIMIT 1), not a second metadata export somewhere else.
+//                 10. ⚠️ THE TITLE IS ONE WORD LONG AND IT IS "404". That is the
+//                  customer's own string, not a choice made here, and it is the
+//                  same string the <h1> renders - so the tab and the page cannot
+//                  disagree. Whether a bereaved family wants a 404 tab that says
+//                  more than a status code is a COPY decision, owed to a human,
+//                  and this file must not pre-empt it by inventing a suffix.
 // ─────────────────────────────────────────────────────────────────────────────
 import Link from 'next/link'
 
-import { DEFAULT_LOCALE } from '@/config/site'
+import { DEFAULT_LOCALE, type Locale } from '@/config/site'
 import { getMessages } from '@/i18n/messages'
 import { localePath } from '@/lib/seo'
+
+// ─── W13-B · THE ONE TYPED CONSTANT FOR THE ABSENT HEBREW 404 COPY ───────────
+// §OPEN — one-edit item: app/[locale]/not-found.tsx:NOT_FOUND_COPY_LOCALE below.
+//
+// WHAT THIS IS. The locale the 404's WORDS ARE ACTUALLY WRITTEN IN — which is a
+// different fact from DEFAULT_LOCALE, the locale whose catalogue they are READ
+// FROM. Today those two disagree, and this constant is the one place that says
+// so out loud instead of letting a document announce itself in a language its
+// text is not in.
+//
+// MEASURED, not assumed (messages/he.json:196-200 and messages/en.json:185-189,
+// read on 2026-09-13): `notFound.title` / `.description` / `.backHome` are the
+// byte-identical English strings "404" / "Oops! Page not found" / "Return to
+// Home" in BOTH catalogues. Hebrew 404 copy does not exist in this project, in
+// the customer's build, or anywhere else. NO AGENT MAY AUTHOR IT.
+//
+// THE ABSENT BRANCH, and why it is a branch and not a decoration: this value is
+// what app/not-found.tsx feeds to `lang` and `dir`. While it is 'en', a visitor
+// who 404s outside the locale tree gets a document declared English and LTR —
+// which is TRUE of the words on it. Before this constant existed that shell said
+// `lang="he" dir="rtl"` over English text, so a screen reader announced English
+// in a Hebrew voice and a translation engine saw a Hebrew document. The unset
+// state is therefore SAFE AND HONEST rather than merely quiet.
+//
+// THE ONE EDIT THAT CLOSES IT. A human licensed to write this site's words
+// replaces messages/he.json's `notFound.*` with real Hebrew, and in the SAME
+// change sets the value below to DEFAULT_LOCALE. Two lines, one commit, and
+// HONEST LIMIT 2's "the day Hebrew 404 copy lands" stops being a trap: the
+// document's language annotation moves with the words instead of lagging them.
+// ⚠️ DO NOT flip this because the site's default locale is Hebrew. Flip it only
+// when the RENDERED STRINGS are Hebrew. It is typed `Locale`, so it cannot name
+// a locale this site does not serve; nothing else checks that it is true.
+// Consumed by the ROOT shell (app/not-found.tsx) for `lang`/`dir` — ONE FACT ONE
+// PLACE: that shell states no locale of its own.
+export const NOT_FOUND_COPY_LOCALE: Locale = 'en'
+
+/**
+ * W13-B: THE 404's OWN TITLE, and the defect it repairs.
+ *
+ * MEASURED BEFORE (live server, GET /he/nope and GET /en/nope, 2026-09-13):
+ *   /he/nope → 404, and its <title> was byte-identical to GET /he's <title>
+ *   /en/nope → 404, and its <title> was byte-identical to GET /en's <title>
+ *              (that one reads: "In the end, everything will be okay")
+ * The Hebrew title is deliberately NOT transcribed into this comment: this file
+ * is under a Hebrew-codepoint scan and a quoted title is not worth weakening it.
+ * i.e. every 404 under a locale advertised itself in a browser tab, a bookmark
+ * and a search result as THE MEMORIAL PAGE. The title came from
+ * app/[locale]/layout.tsx's `generateMetadata`, which the 404 inherits.
+ * MEASURED AFTER, same two URLs: <title>404</title>.
+ *
+ * The word is NOT authored here. It is `notFound.title`, the string W7-FIX-E
+ * transcribed from the customer's own NotFound.tsx:14, reached through the one
+ * validated accessor — so the tab and the <h1> below cannot say different
+ * things, and a missing key is a compile error rather than a literal
+ * "notFound.title" in a bereaved family's search results.
+ *
+ * It is a MODULE CONSTANT, deliberately. Per the ⚠️ at the top of this file this
+ * module is evaluated on every render of /he and /en; `getMessages` is a pure
+ * synchronous read of a zod-validated catalogue with no request in scope, so
+ * this costs the two content pages nothing and cannot de-optimise them.
+ *
+ * MEASURED that Next reads it at all: an `export const metadata` in a
+ * `not-found.tsx` is not something Next's docs promise. A probe value was put
+ * here, the live server was asked for /he/nope and /en/nope, and BOTH returned
+ * the probe string as <title>. It works in this Next (15.5.25). See HONEST
+ * LIMIT 9 for what that probe did NOT prove.
+ */
+export const metadata = {
+  title: getMessages(DEFAULT_LOCALE).notFound.title,
+}
 
 export default function LocaleNotFound() {
   // A CONSTANT, on purpose. See the ⚠️ at the top of this file and MEASURED 2/3:

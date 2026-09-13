@@ -92,8 +92,50 @@
 //                  SO: the CSP below is REAL but PARTIAL. It enforces framing,
 //                  form target, base URI and plugin content - four directives
 //                  that no inline script or analytics host can trip over. XSS
-//                  mitigation via CSP remains OPEN and is owned by whoever owns
-//                  `middleware.ts`.
+//                  mitigation via CSP remains OPEN.
+//
+//                  ⚠️ W13-B CORRECTION - THE LAST SENTENCE OF THIS LIMIT USED TO
+//                  READ "...and is owned by whoever owns `middleware.ts`." THAT
+//                  HANDOFF IS FALSE AND FOLLOWING IT WOULD HAVE KILLED THIS SITE.
+//                  It is corrected in place rather than deleted, because the next
+//                  reader will arrive holding the same plausible idea.
+//
+//                  WHY A MIDDLEWARE NONCE CANNOT WORK HERE. Next derives a script
+//                  nonce from the REQUEST header `content-security-policy`, in
+//                  ONE place: app-render.js:108-109 -> get-script-nonce-from-
+//                  header.js. That code runs only when app-render runs. `/he` and
+//                  `/en` ARE NOT RENDERED PER REQUEST - they are prerendered to
+//                  .next/server/app/he.html and en.html (both on disk; both in
+//                  prerender-manifest.json) and served from the response cache by
+//                  base-server.js, which contains ZERO occurrences of "nonce" and
+//                  ZERO of "content-security-policy" (grepped, Next 15.5.25).
+//                  MEASURED IN THE PRERENDERED BYTES: he.html carries 9 external
+//                  `<script src>` tags and 21 inline `<script>` blocks, and NOT
+//                  ONE has a nonce attribute - the build baked the literal
+//                  `"nonce":"$undefined"` into the RSC payload, three times.
+//                  THEREFORE: adding `script-src 'nonce-<per-request>'` to this
+//                  response would block all 30 scripts on the two pages that ARE
+//                  this site. The visitor gets an unhydrated shell. No test, no
+//                  tsc, no lint and no HTTP status probe would go red - the page
+//                  returns 200 with the right bytes and simply never comes alive.
+//                  A nonce would "work" perfectly in `next dev`, where every
+//                  route is dynamic, which is what makes this trap worth ink.
+//                  WHAT WOULD ACTUALLY CLOSE IT, and the price of each:
+//                  (a) Make /he and /en dynamic. Then the nonce is real - and
+//                      W7-FIX-E's measured win is reversed: no he.html, no
+//                      `x-nextjs-cache: HIT`, and every visitor pays a server
+//                      render of a ~110 KB page. That is a product trade-off, not
+//                      a security decision, and it is NOT an agent's to make.
+//                  (b) Hash the bootstrap inline scripts at build time and emit
+//                      `script-src 'strict-dynamic' 'sha256-...'`. This is the
+//                      right architecture and it keeps the static pages. It needs
+//                      a post-`next build` step that reads the emitted HTML, and
+//                      a build is outside every delegate brief so far.
+//                  (c) `Content-Security-Policy-Report-Only` with the nonce.
+//                      Rejected: with no report collector configured it enforces
+//                      nothing and reports to nobody. A decoration.
+//                  UNTIL ONE OF THOSE LANDS, `script-src` STAYS ABSENT. An absent
+//                  directive is an honest gap; a nonce here is a dead memorial.
 //               2. `Strict-Transport-Security` is set WITHOUT `includeSubDomains`
 //                  and WITHOUT `preload`. The apex domain is an unanswered
 //                  question (ledger OPEN 5 - `SITE_URL` has no evidence in either

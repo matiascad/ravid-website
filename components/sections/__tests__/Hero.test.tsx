@@ -112,6 +112,41 @@ describe('Hero', () => {
     expect(lazy).toHaveLength(3)
   })
 
+  it('marks the portrait — and no other image — fetchpriority="high" on the rendered element', () => {
+    // W13-C. `fetchPriority` IS observable in the DOM, unlike `priority`, so this
+    // asserts the ATTRIBUTE THE BROWSER RECEIVES rather than the prop passed.
+    // Exactly one high-priority image: marking several makes all of them slower,
+    // so the count is the guarantee, not the presence.
+    const { container } = render(<Hero m={he} locale={SOURCE_LOCALE} />)
+
+    const high = [...container.querySelectorAll('img')].filter(
+      (image) => image.getAttribute('fetchpriority') === 'high',
+    )
+    expect(high).toHaveLength(1)
+
+    const portrait = screen.getByAltText(he.imageAlts[PORTRAIT_KEY])
+    expect(high[0]).toBe(portrait)
+
+    // The badges must not compete with it. Every lazy image is also unprioritised.
+    for (const image of container.querySelectorAll('img[loading="lazy"]')) {
+      expect(image.getAttribute('fetchpriority')).toBeNull()
+    }
+  })
+
+  it('keeps every alt present on the rendered images, prioritised or not', () => {
+    // A memorial photograph without an alt is a photograph that goes silent to a
+    // screen reader. This asserts the ATTRIBUTE IS PRESENT on all four rendered
+    // elements — a weight change must never cost one.
+    const { container } = render(<Hero m={he} locale={SOURCE_LOCALE} />)
+
+    const images = [...container.querySelectorAll('img')]
+    expect(images).toHaveLength(4)
+    for (const image of images) {
+      expect(image.hasAttribute('alt')).toBe(true)
+      expect(image.getAttribute('alt')).not.toBe('')
+    }
+  })
+
   it('annotates the source-locale badge alts only on a non-source locale', () => {
     // The badge alts are Hebrew proper nouns in EVERY locale (ledger D-18), so on
     // the English page their language context must be declared. That annotation

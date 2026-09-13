@@ -1,0 +1,96 @@
+ravid_website — packaged handoff snapshot
+Date: 2026-09-13
+Prepared by: W15 "HANDOFF" delegate (second overnight run, waves W9-W15)
+
+NOTE ON NAMING
+  This file is MANIFEST_2026-09-13.txt, deliberately NOT "MANIFEST.txt".
+  dist/MANIFEST.txt already exists and documents the 2026-09-12 tarball.
+  Overwriting it would destroy the record of the earlier archive.
+  Nothing in dist/ was deleted, renamed or overwritten by W15.
+
+TARBALL
+  Filename : ravid_website_2026-09-13.tar.gz
+  Path     : dist/ravid_website_2026-09-13.tar.gz
+  Size     : 4365269 bytes (4,365,269 bytes)
+  SHA-256  : 70d655452d2b3415edd4de3d840ead47d10ac90923d967b3f415776c96610b1e
+  Files inside archive (regular files, top-level dir "ravid_website/"): 184
+
+RECONCILIATION
+  !! READ THIS BEFORE COMPARING WITH MANIFEST.txt (2026-09-12).
+  The two manifests count DIFFERENT DENOMINATORS, and the difference is
+  not a discrepancy:
+
+    MANIFEST.txt (2026-09-12) reconciled against FILES ON DISK  : 24,975
+    This manifest reconciles against the GIT-VISIBLE FILE SET   :      248
+
+  W15's candidate set came from `git ls-files -co --exclude-standard`,
+  which already honours .gitignore. node_modules/ and .next/ are therefore
+  absent from the candidate list rather than "excluded" from it, and this
+  manifest does NOT claim a whole-disk reconciliation it did not perform.
+  The on-disk totals for node_modules/ and .next/ are NOT-MEASURED by W15.
+
+  Candidates (git-visible, tracked + untracked, .gitignore honoured) : 248
+  Excluded                                                          :  64
+    _legacy/.next-stale-next14/   (stale Next 14 build cache)       :  48
+    Claude outputs/               (agent session artefacts, mode 700):   9
+    artifacts/                    (screenshots + e2e output)        :   5
+    dist/                         (this directory; no self-nesting) :   2
+  Included in archive                                               : 184
+
+  Arithmetic: 184 + 64 = 248  (included + excluded = git-visible candidates)
+
+EXCLUSION POLICY
+  Matched to MANIFEST.txt (2026-09-12) rather than invented. That manifest
+  excluded node_modules/, .next/, .git/, _legacy/.next-stale-next14/,
+  artifacts/ and "Claude outputs/". W15 applied the same list.
+
+  !! WHY THIS MATTERS: W15's FIRST attempt omitted the
+  _legacy/.next-stale-next14/ exclusion and produced a 25,664,642-byte
+  archive -- 5.9x larger -- because that directory holds ~20 MB of stale
+  Next 14 build cache (single largest member: a 9,070,355-byte webpack
+  pack.gz). It was caught by enumerating the archive's ten largest members
+  instead of trusting the tar exit code. The oversized archive was
+  overwritten by the correct one; nothing else was deleted.
+
+CONTENTS BY DIRECTORY (inside archive, under ravid_website/)
+  components/     35    public/         34    lib/            32
+  (root files)    29    _legacy/        19    app/            16
+  i18n/            6    tests/           5    __tests__/       2
+  messages/        2    content/         2    scripts/         1
+  config/          1
+                       ------------------------------------------
+                       TOTAL           184
+
+DELTA vs THE 2026-09-12 ARCHIVE
+  2026-09-12 : 140 files, 4,105,123 bytes
+  2026-09-13 : 184 files, 4,365,269 bytes
+  Difference : +44 files, +260,146 bytes
+
+  The +44 is the second overnight run's additions -- the lead sink
+  (lib/leads/**), the measurement layer (lib/analytics/**), content/,
+  lib/seo/, the new sections (Speaker, PrivacyNotice, TrackedLink) with
+  their tests, playwright.config.ts, and the e2e spec.
+  !! W15 did NOT verify this figure file-by-file against the older archive.
+  The +44 is arithmetic on two totals, not a diff. Treat it as such.
+
+  _legacy/ holds 19 files in both archives -- 18 replaced source files plus
+  WHY.md -- unchanged, byte-for-byte, across both runs.
+
+WHAT IS *NOT* IN THIS ARCHIVE
+  - node_modules/ and .next/  -- reproducible; `npm install` restores them.
+  - .git/                     -- 314 files; history is NOT archived here.
+  - artifacts/                -- the browser-pass screenshots and e2e output.
+  - "Claude outputs/"         -- agent session artefacts; directory is mode
+                                 700 and was left untouched.
+  - Any environment variable VALUE. Only NAMES appear anywhere in the
+    source, each declared once as a typed constant.
+
+HONEST LIMIT OF THIS MANIFEST
+  - The archive was ENUMERATED (tar -tzf) but not EXTRACTED and not test-
+    restored. That it unpacks cleanly is NOT-MEASURED.
+  - The SHA-256 above is of the file as written at 06:32 on 2026-09-13.
+  - W15 deleted nothing, archived nothing else, and moved nothing. The
+    2026-09-12 tarball and its MANIFEST.txt are untouched.
+  - Every count in this file was measured by W15 at packaging time. None
+    was copied from MANIFEST.txt except the two figures explicitly
+    attributed to it in the DELTA section above.

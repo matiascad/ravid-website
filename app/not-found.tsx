@@ -124,13 +124,36 @@
 //                  would fix. CONSEQUENCE: this shell renders in the system
 //                  fallback stack. Closing it means exporting the font from one
 //                  module both shells import, i.e. editing the layout.
-//               4. THE ROOT SHELL IS `he`/`rtl` FOR EVERY VISITOR. A root 404 has
-//                  no locale in scope by definition, so an English speaker who
-//                  hits a path outside the locale tree gets a document declared
-//                  Hebrew and RTL. This is not a guess invented here — it is the
-//                  same fallback i18n/request.ts already applies, so the shell
-//                  and the words agree — but it is a fallback, not knowledge.
-//                  Negotiating a locale from the request lives in middleware.ts.
+//               4. ⚠️ THIS LIMIT WAS REPAIRED BY W13-B, AND ITS OLD TEXT WAS
+//                  WRONG ON ITS OWN TERMS. It read: "THE ROOT SHELL IS `he`/`rtl`
+//                  FOR EVERY VISITOR ... it is the same fallback i18n/request.ts
+//                  already applies, SO THE SHELL AND THE WORDS AGREE — but it is
+//                  a fallback, not knowledge." The last clause is the false one.
+//                  The shell and the words did NOT agree: MEASURED on a live
+//                  server (GET /he/nope, GET /en/nope, 2026-09-13) the rendered
+//                  words are the English strings "404" / "Oops! Page not found" /
+//                  "Return to Home", because messages/he.json's `notFound.*` IS
+//                  that English text verbatim (that file's own HONEST LIMIT 1
+//                  says so). So the document announced `lang="he" dir="rtl"` over
+//                  English prose — a screen reader reading English in a Hebrew
+//                  voice, and a translation engine told not to bother.
+//                  WHAT CHANGED: `lang`/`dir` now come from
+//                  NOT_FOUND_COPY_LOCALE — the locale the 404's WORDS ARE IN,
+//                  which is a different fact from DEFAULT_LOCALE, the catalogue
+//                  they are READ FROM. IMPOSSIBLE (a) is untouched: both
+//                  attributes are still expressions over ONE constant, so they
+//                  still cannot drift apart from each other.
+//                  WHAT IS STILL OPEN: Hebrew 404 copy does not exist and no
+//                  agent may write it. §OPEN — one-edit item:
+//                  app/[locale]/not-found.tsx:NOT_FOUND_COPY_LOCALE. A human
+//                  authors messages/he.json's `notFound.*` and flips that one
+//                  value in the same change.
+//                  WHAT IS STILL TRUE FROM THE OLD TEXT: a root 404 has no
+//                  locale in scope, so this is still a constant, not a
+//                  negotiation. Negotiating a locale from the request lives in
+//                  middleware.ts. And per limit 2, none of `lang`/`dir` reaches
+//                  the FIRST BYTES of a 404 anyway — this fixes the hydrated
+//                  document and the RSC payload, not the shell Next hardcodes.
 //               5. THIS CLOSES THE NOT-FOUND BOUNDARY ONLY. `app/layout.tsx` is
 //                  still a pass-through, so a future app/global-error.tsx would
 //                  reach the same shell-less state. Moving <html> back into
@@ -140,10 +163,9 @@
 //                  content="noindex">` still applies to a 404; W5-B owns the
 //                  rest. A <title> here would be a second author of it.
 // ─────────────────────────────────────────────────────────────────────────────
-import { DEFAULT_LOCALE } from '@/config/site'
 import { LOCALE_DIRECTION } from '@/i18n/routing'
 
-import LocaleNotFound from './[locale]/not-found'
+import LocaleNotFound, { NOT_FOUND_COPY_LOCALE } from './[locale]/not-found'
 
 import './globals.css'
 
@@ -158,7 +180,10 @@ import './globals.css'
  */
 export default function RootNotFound() {
   return (
-    <html lang={DEFAULT_LOCALE} dir={LOCALE_DIRECTION[DEFAULT_LOCALE]}>
+    <html
+      lang={NOT_FOUND_COPY_LOCALE}
+      dir={LOCALE_DIRECTION[NOT_FOUND_COPY_LOCALE]}
+    >
       <body>
         <LocaleNotFound />
       </body>

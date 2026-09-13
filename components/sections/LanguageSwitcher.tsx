@@ -116,12 +116,22 @@
 //                  language-selector key among them. This delegate REFUSED to
 //                  invent either one — inventing a language's name is authoring
 //                  copy, and copy is the customer's, not ours.
+//
+// W10-B ANALYTICS · Each locale link reports `lang_switch` carrying the locale
+// it switches TO - the same `target` that builds the link, so the report and the
+// navigation cannot disagree. Routed through `emit()`, so a throwing tracker
+// cannot eat the click.
+// HONEST LIMIT (analytics) `LanguageSwitcher.test.tsx`'s Link mock OVERRIDES
+// onClick and therefore cannot see this handler at all; the proof lives in
+// `__tests__/analytics-wiring.test.tsx`, whose mock forwards it.
 // ─────────────────────────────────────────────────────────────────────────────
 'use client'
 
 import { NextIntlClientProvider } from 'next-intl'
 
 import { LOCALES, type Locale } from '@/config/site'
+import { emit } from '@/components/sections/TrackedLink'
+import { langSwitch } from '@/lib/analytics/events'
 import { Link, usePathname } from '@/i18n/routing'
 
 export type LanguageSwitcherProps = {
@@ -169,6 +179,13 @@ function LocaleLinks({ locale }: LanguageSwitcherProps) {
             <Link
               href={pathname}
               locale={target}
+              onClick={() => {
+                // The event carries the locale being switched TO — the same
+                // `target` that builds the link, so the report and the
+                // navigation cannot name different languages. `emit` swallows,
+                // so a throwing tracker cannot eat the click (D-73 / W10-B).
+                emit(langSwitch(target))
+              }}
               lang={target}
               hrefLang={target}
               aria-current={isCurrent ? 'true' : undefined}

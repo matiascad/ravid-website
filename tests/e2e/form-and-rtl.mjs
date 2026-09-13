@@ -1,8 +1,17 @@
 // W7-B pass 2: lead form in a real browser, keyboard reach of the switcher,
 // and an asymmetry-based mirroring probe. Read-only; configures no provider.
+//
+// ⚠ THIS IS A REPORTER, NOT A GATE — see the header of visual-verify.mjs.
+//   It prints JSON and exits 0 whatever it finds. `npm run e2e` does not run
+//   it. Its RTL-mirroring and form measurements are worth keeping; its
+//   silence about failure is why it cannot be the gate.
+//
+//   Run it by hand, after starting a server:  node tests/e2e/form-and-rtl.mjs
 import { chromium } from '@playwright/test';
+import { E2E_BASE_URL } from './e2e.env.mjs';
 
-const BASE = process.env.BASE_URL || 'http://localhost:3477';
+// Was hardcoded to `http://localhost:3477`, a port nothing in this repo serves.
+const BASE = process.env.BASE_URL || E2E_BASE_URL;
 const out = {};
 const browser = await chromium.launch();
 

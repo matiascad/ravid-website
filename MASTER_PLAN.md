@@ -105,7 +105,7 @@ precisely how the customer's own `Translations` type rotted into irrelevance.
 The rules that follow from it:
 
 - **One named export per section. No default export** (D-31). Default exports rename silently at the
-  import site, so thirteen sections and one composition file would give every name two spellings.
+  import site, so the section files and one composition file would give every name two spellings.
 - **No section reads `locale`** unless it genuinely branches on it. Where a section does not vary by
   locale, that **invariance is asserted as a test** — same props, both locales, compared — so it goes red
   the instant someone adds a locale branch (D-30). A difference test over a component with no
@@ -161,6 +161,37 @@ One structural constraint worth knowing before you try to improve the tests: a N
 type error. So the test seam sits one layer lower than an exported interface. The named closer, if that
 ever becomes a constraint, is in D-36.
 
+### 4a. The lead *sink* — added in W9, "the lead outlives the email"
+
+The section above describes the **mailer**. It is no longer the whole story, and this subsection is the
+part a deployer must read.
+
+An email is a delivery, not a record. If the mail provider is down, or the family's inbox loses it, the
+enquiry is gone. So the route now writes the lead to a **sink** as well, behind a port
+(`lib/leads/port.ts`) with two implementations: a **KV store** (`KV_REST_API_URL` + `KV_REST_API_TOKEN`)
+and an **HTTP webhook** (`LEAD_WEBHOOK_URL`). `lib/leads/sinks/` also holds a composite (both at once),
+a resolver, and an explicit `unconfigured` arm.
+
+🔴 **The `unconfigured` arm is not a fallback — it is a 503.** Exactly as with the mailer, "store it
+nowhere and tell the visitor it worked" is unrepresentable. **With no sink configured on the live host,
+every real enquiry gets a 503 and nothing is stored.** A `LEAD_WEBHOOK_URL` whose scheme is not `https:`
+resolves as *unconfigured*, not as a misconfigured webhook — it does not half-work.
+
+⚠️ **Nothing in this repository can observe the live host.** Whether those variables are set is a check
+someone must perform in the hosting dashboard. Do not let a comment in a test file stand in for it.
+
+Three known limits, each with its closer in the ledger's §DEFERRED:
+- **A lead can sit at `deliveryState: 'pending'` forever.** No sweeper exists. `pending` means
+  **"unknown"**, never "in progress" (D-65).
+- **Partial sink failure is invisible to the caller.** With both sinks configured and one down, the
+  route sees plain success; the only trace is one `console.warn` nobody reads (D-61).
+- **The rate limiter and the idempotency cache are per-process memory.** On serverless they reset on
+  cold start and do not coordinate. "5 per minute per IP" is **per instance** — state it that way or not
+  at all (D-66).
+
+**⛔ Never** widen the sink's success arm to tolerate an unconfigured store. That is D-4 again, one layer
+down.
+
 ---
 
 ## 5. The asset pipeline
@@ -179,7 +210,7 @@ The rules that are load-bearing:
   the single `.webp`, so a second stored encoding would be dead weight nothing selects. AVIF was
   *measured* rather than assumed, and it loses on most of these files (§W6).
 - **Two files grew as WebP and were kept anyway**, rather than silently switched to `.jpg`, because
-  thirteen sections compile against the `.webp` path. The cost was reported, not absorbed (§W6).
+  the sections compile against the `.webp` path. The cost was reported, not absorbed (§W6).
 - **Page weight is judged on what a visitor downloads before the page is usable**, not on the sum of
   files on disk. That distinction is the whole of D-40/D-41, and the on-disk figure is the wrong metric
   — transferred bytes turned out to be *lower* than on-disk, because Next re-encodes at request time.
@@ -220,6 +251,24 @@ Next's matcher has no method predicate (D-50). It is an operational note for dep
 
 **Analytics** is a server component that renders `null` when its variable is unset, which is the current
 state. It makes no request and emits no script until configured.
+
+Since W10 there is also a **measurement layer** — `lib/analytics/track.ts` and `lib/analytics/events.ts`
+— carrying nine funnel events, wired through `components/sections/TrackedLink.tsx`. Today it is inert:
+the id is unset and the substrate is measured at **zero** scripts, **zero** network calls, **zero**
+globals.
+
+🔴 **There is no consent banner, and the moment a GA4 id is set, tracking begins without one.** The nine
+events and GA's own page-views start the instant a human pastes an id into the hosting dashboard. The
+delegate that built the layer **refused to build or decide a consent gate** and stopped at the boundary,
+naming it in `track.ts`'s honest limit so it could not be discovered by accident. **This is a legal
+question in a jurisdiction, not an engineering one**, and it concerns a site whose visitors are bereaved
+families and serving soldiers' relatives. ⛔ **Setting `NEXT_PUBLIC_GA_MEASUREMENT_ID` is not a one-edit
+item like the others in §OPEN — it is the one row where activating a constant has consequences beyond
+the screen** (§OPEN 15; activation point `lib/analytics.ts:76`).
+
+⚠️ **And nothing in this repository reads the counters back.** `readLeadFunnel()` (`lib/leads/log.ts:480`)
+returns real numbers and **no page, route or script calls it**. The measurement wave produced an integer
+in a database, not something a grieving family can check (§OPEN 16).
 
 ---
 

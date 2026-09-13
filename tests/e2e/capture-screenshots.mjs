@@ -1,7 +1,21 @@
+// ⚠ THIS IS A REPORTER, NOT A GATE — see the header of visual-verify.mjs.
+//   It captures the four screenshots and exits 0 whatever they look like.
+//   `npm run e2e` does not run it.
+//
+//   Run it by hand, after starting a server:  node tests/e2e/capture-screenshots.mjs
 import { chromium } from '@playwright/test';
 import { statSync } from 'node:fs';
-const BASE='http://localhost:3477';
-const SHOTS='/home/mati/project/ravid_website/artifacts/screenshots/';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+import { E2E_BASE_URL } from './e2e.env.mjs';
+
+// Was hardcoded to `http://localhost:3477`, a port nothing in this repo serves.
+const BASE = process.env.BASE_URL || E2E_BASE_URL;
+// Was an absolute path to one developer's home directory, which makes the
+// script unrunnable anywhere else. Derived from this file's own location now.
+const SHOTS =
+  path.join(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..'), 'artifacts', 'screenshots') +
+  path.sep;
 const b=await chromium.launch();
 for(const loc of ['he','en']) for(const vp of [{n:'mobile',width:390,height:844},{n:'desktop',width:1440,height:900}]){
   const c=await b.newContext({viewport:{width:vp.width,height:vp.height}});
