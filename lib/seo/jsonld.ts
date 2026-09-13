@@ -51,23 +51,25 @@
 //
 // `Person` IS OMITTED ENTIRELY — and this is a MEASUREMENT, not caution.
 // `Person` without `name` is worthless, and THIS REPOSITORY HAS NO CITABLE NAME:
-//   · content/speaker.ts:369-388 — `SpeakerContentSource` models bio,
+//   · The `SpeakerContentSource` interface in content/speaker.ts models bio,
 //     credentials, audiences, venues, video and pressMentions. It models NO name
 //     field at all. There is no key to read.
-//   · content/speaker.ts:389 — `SPEAKER_CONTENT` is `{}`. Every field that DOES
-//     exist is unset, so there is no bio, credential, venue or press mention to
-//     attach to a Person even if one could be named.
+//   · The `SPEAKER_CONTENT` constant in content/speaker.ts is `{}`. Every field
+//     that DOES exist is unset, so there is no bio, credential, venue or press
+//     mention to attach to a Person even if one could be named.
 //   · The speaker's name occurs in the catalogues ONLY inside the `copyright`
 //     sentence (messages/en.json `copyright`, messages/he.json `copyright`).
 //     Recovering it would mean regex-extracting a proper noun out of a localised
 //     sentence — that is AUTHORING a fact, and it breaks the moment either
 //     catalogue is reworded. It is not a citable single source.
-//   · config/site.ts:49-50 states that file holds NO memorial facts by design.
+//   · config/site.ts's own header states it outright — "This file contains NO
+//     memorial facts: no name, date, unit or count." — so it holds none by
+//     design, and a name could not be read from there either.
 // So `alumniOf`, `worksFor`, `award`, `memberOf`, `jobTitle`, `sameAs` and any
 // venue are not "fields we left blank" — their subject cannot be named. A thin
 // Person was the expectation; NO Person is what the repository actually
 // supports. Restoring one is a one-edit item once a name gains a single home:
-// §OPEN — one-edit item: content/speaker.ts:389.
+// §OPEN — one-edit item: the `SPEAKER_CONTENT` constant in content/speaker.ts.
 //
 // `Review` / `AggregateRating` / `Offer` ARE OMITTED ENTIRELY. Measured state of
 // `messages/{he,en}.json` `testimonials` (3 entries, both locales):
@@ -87,9 +89,24 @@
 // There are no prices and no bookable products in this repository, so `Offer`
 // has no subject either.
 //
-// `potentialAction`/`SearchAction` is omitted: this site has no search. `sameAs`
-// is omitted: the Instagram handle in config/site.ts:78 is still OPEN 1, and
-// `sameAs` is an identity claim about a PERSON this graph does not name.
+// `potentialAction`/`SearchAction` is omitted: this site has no search.
+//
+// `sameAs` IS OMITTED — and since 2026-09-13 it rests on ONE reason, not two.
+// The first reason is GONE: §OPEN 1 is ANSWERED (Mati, 2026-09-13), and the
+// handle now has a settled single home — the `INSTAGRAM_HANDLE` constant in
+// config/site.ts, cited here BY NAME on purpose. The sentence this replaces
+// cited `config/site.ts:78`; when that was MEASURED, line 78 held the WhatsApp
+// comment and the constant stood at :88. A line number is the most perishable
+// citation this file can write, and it is not written here again.
+// The SURVIVING reason is sufficient alone: `sameAs` is an IDENTITY CLAIM, and
+// an identity claim needs a SUBJECT. This graph names nobody — the `Person`
+// paragraph above was RE-MEASURED on 2026-09-13 and is still exactly true — so
+// the only nodes a `sameAs` could hang on are `WebSite` and `WebPage`, and
+// neither of them is the person who owns that account. Knowing the handle did
+// not make the claim sayable; it only removed the lesser of the two reasons for
+// not saying it. `sameAs` becomes available the day a `Person` node with a
+// citable `name` exists — not before, and by a human's decision, not as a
+// side effect of an edit here.
 //
 // HONEST LIMIT  1. ⚠️ GOOGLE HAS NOT SEEN THIS. Whether the Rich Results Test or
 //                  the Schema.org validator ACCEPTS this markup is NOT-MEASURED:
@@ -116,7 +133,8 @@
 //                  app/robots.ts and app/opengraph-image.tsx, both OUTSIDE this
 //                  delegate's write-set, so it is not attempted here rather than
 //                  attempted halfway. The resolution is PROVED by a test, not
-//                  assumed. §OPEN — one-edit item: lib/seo.ts:1.
+//                  assumed. §OPEN — one-edit item: the `lib/seo.ts` module
+//                  itself (the file, not a line in it).
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { LOCALES, type Locale } from '@/config/site'
@@ -152,7 +170,7 @@ interface WebSiteNode {
   readonly '@type': 'WebSite'
   readonly '@id': string
   readonly url: string
-  /** DERIVED from LOCALES (config/site.ts:107) — never a second locale list. */
+  /** DERIVED from `LOCALES` in config/site.ts — never a second locale list. */
   readonly inLanguage: readonly Locale[]
 }
 
@@ -189,7 +207,7 @@ export interface JsonLdGraph {
  * Project one locale's page into the graph.
  *
  * Takes `MetadataCopy` rather than the catalogue, for the same reason
- * `metadataCopy()` takes messages rather than importing them (lib/seo.ts:248):
+ * `metadataCopy()` in lib/seo.ts takes messages rather than importing them:
  * the copy this graph states MUST be the identical object the `<title>` and the
  * OpenGraph card state, and the only way to guarantee that is to be handed it.
  * Deriving it a second time here would be a second fact wearing the first's name.

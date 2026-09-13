@@ -144,7 +144,8 @@
 //      W9-D, not assumed: a repo-wide grep for `formSending`/`formError` returns
 //      only the three lines of this comment block — the keys are ABSENT from
 //      `i18n/messages.ts`, `messages/he.json` and `messages/en.json` alike. The
-//      one-edit sites are `i18n/messages.ts:292` (schema) plus the matching key
+//      one-edit sites are the `formSuccess`/`formSuccessDesc`/`formDirect` group
+//      in the messages schema in `i18n/messages.ts` plus the matching key
 //      in both catalogues. Until then the failure UX renders `formDirect` and
 //      nothing else in words, which is true but does not say "sending failed".
 //   3. `noValidate` IS DELIBERATE, and it is a trade. The browser's own
@@ -263,20 +264,20 @@
 // in the same `catch` with nothing this component inspects to separate them.
 // No lead field reaches any event: `failReason` is handed a number.
 //
-// W13-A PRIVACY NOTICE · THE PATH IS BUILT AND IT RENDERS NOTHING. `<PrivacyNotice
-// m={m} />` sits after the fields, and the form's `aria-describedby` names it —
-// but only when the catalogue answers all three of `privacyTitle`, `privacyData`
-// and `privacyRetention`, and TODAY IT ANSWERS NONE. So the component returns
-// null, `formDescribedBy` is exactly `STATUS_ID`, and the idle page is byte-for-
-// byte what it was: MEASURED, 4981 characters, sha256 93977daad62b4c4468c400b2f
-// 08532d2773d6c677fa7f9dc4be45417b701b8cb, identical before and after and in both
-// locales. The `Partial<PrivacyNoticeText>` on the props type is why no page or
-// component will need editing when the answer arrives.
-// HONEST LIMIT (privacy) A VISITOR IS TOLD NOTHING TODAY about what becomes of
-// the name, phone, email, organisation and message they hand over, and this file
-// cannot fix that: a retention period and a non-sharing promise are facts only
-// Ravid knows, and inventing them would be a lie told to a bereaved stranger
-// about their own data. The refusal is recorded in full in PrivacyNotice.tsx.
+// W13-A/W16-A PRIVACY NOTICE · THE PATH WAS BUILT EMPTY AND IS NOW ANSWERED.
+// `<PrivacyNotice m={m} />` sits after the fields and the form's
+// `aria-describedby` names it — but only when the catalogue answers EVERY key in
+// `PRIVACY_KEYS`, which both catalogues now do (W16-A). So the notice renders and
+// `formDescribedBy` is `${STATUS_ID} ${PRIVACY_NOTICE_ID}`. THIS FILE WAS NOT
+// EDITED TO MAKE THAT HAPPEN — not one line of code: the mount, the presence
+// rule and the `Partial<PrivacyNoticeText>` props type were already here, so the
+// change was three edits in three OTHER files (schema + two catalogues). That was
+// the whole point of shipping the path before the text.
+// HONEST LIMIT (privacy) The notice states what THIS CODE does with an enquiry.
+// It is not a legal privacy policy, it names no retention period because nothing
+// here enforces one, and it stops at the edge of the code: what a mail provider
+// or a configured webhook keeps is not observable from this repository. The full
+// argument, and what W13-A refused and why, is in PrivacyNotice.tsx.
 //
 // W14-FIX1 · AN OK STATUS IS NOT A STORED LEAD. THE ONE BEHAVIOUR CHANGE, stated
 // plainly. Before: success was decided on `response.ok === true` alone, so the
@@ -358,8 +359,9 @@ type LeadFormMessages = Pick<
    * `Pick`, is the whole trick: `app/[locale]/page.tsx` already hands this
    * component the entire `getMessages(locale)` object, so the day the catalogue
    * and its schema gain these keys they arrive here with NO edit to this file
-   * and NO edit to the page. Today all three are absent, `resolvePrivacyNotice`
-   * returns null, and the notice is worth zero bytes.
+   * and NO edit to the page. W16-A: the keys landed, and this file did not move —
+   * `Partial` still admits the unanswered state on purpose, because a form that
+   * cannot represent it cannot be proved to stay silent in it.
    */
   Partial<PrivacyNoticeText>;
 
@@ -459,6 +461,62 @@ const HONEYPOT_NAME = 'hp_ref';
  * read computed styles skips this field. Most are not.
  */
 const HONEYPOT_STYLE: CSSProperties = { display: 'none' };
+
+/* ── W16-C · THE NO-JS SUBMIT, REMOVED ────────────────────────────────────── */
+
+/**
+ * MEASURED DEFECT, on the built server, Playwright with `javaScriptEnabled:
+ * false`, before this constant existed. The form carried `onSubmit` and NOTHING
+ * ELSE — no `action`, no `method` — so a browser with scripting off did the only
+ * thing HTML says to do: a GET to the page's own URL with every named control in
+ * the query string. The resulting URL was, verbatim:
+ *
+ *   /he?hp_ref=&name=No+Js+Visitor&phone=0507654321
+ *      &email=nojs%40example.com&organization=&message=secret+message+text
+ *
+ * A name, a phone number, an email address and a private message, written into a
+ * URL — which is the one place personal data must never go: it lands in the
+ * browser's history and autocomplete, in the server's access log, in any proxy's
+ * log, and in the `Referer` header of every subsequent request from that page.
+ * Nothing is submitted and nobody is contacted, so the visitor pays that price
+ * for an enquiry that was never sent.
+ *
+ * TWO INDEPENDENT MECHANISMS CLOSE IT, and neither is copy:
+ *
+ * 1. `method="post"` on the <form>. With no `action`, a native submit becomes a
+ *    POST to the page's own URL, and `middleware.ts` allowlists {GET, HEAD,
+ *    OPTIONS} on every localisable path, so it is refused with 405. A GET-shaped
+ *    submit is no longer EXPRESSIBLE by this element, whatever happens to (2) or
+ *    to the CSS build — a form's fields cannot enter a URL when the form's method
+ *    is not one that puts them there. This costs the scripted path exactly
+ *    nothing: `handleSubmit` calls `preventDefault()` on its first line, so the
+ *    method is never consulted when scripting is on.
+ *
+ * 2. The stylesheet below, delivered inside <noscript> — the one element whose
+ *    content a browser applies WHEN AND ONLY WHEN scripting is off. It hides the
+ *    controls that cannot work without scripting. What a no-JS visitor is left
+ *    with is NOT a dead end and is NOT new text: `data-testid="form-direct"`,
+ *    thirty lines below the </form>, is a plain <a href> to WhatsApp and the
+ *    phone number, already rendered on every load, already headed by
+ *    `m.formDirect`. It needs no script, it was already reachable, and hiding the
+ *    form simply moves it to the top of what remains. NOT ONE WORD IS AUTHORED
+ *    HERE: this file adds a CSS rule, and the replacement route was already in
+ *    the catalogue and already on the page.
+ *
+ * The subtitle is hidden with the form because it says to fill in details; left
+ * standing over a hidden form it would be the only dishonest sentence on the
+ * page. Hiding is all that happens to it — its words are untouched.
+ *
+ * WHY `dangerouslySetInnerHTML` AND NOT JSX CHILDREN: a browser with scripting
+ * ENABLED parses <noscript> content as raw text, while React's server renderer
+ * emits it as markup — the two disagree, and hydrating JSX children of a
+ * <noscript> is the mismatch that follows. Handing React an opaque string keeps
+ * both sides identical. The string is a module constant with no interpolation of
+ * anything a visitor typed; there is no value here for anyone to inject into.
+ */
+const NOJS_HIDDEN_CLASS = 'lead-form-needs-js';
+
+const NOJS_STYLESHEET = `<style>.${NOJS_HIDDEN_CLASS}{display:none!important}</style>`;
 
 const TITLE_ID = 'lead-form-title';
 const STATUS_ID = 'lead-form-status';
@@ -792,15 +850,36 @@ export function LeadForm({ m, locale }: LeadFormProps) {
 
         {status === 'sent' ? null : (
           <>
-            <p className="mb-7 text-center text-gray-300">{m.formSubtitle}</p>
+            {/*
+              W16-C. The one element on this page whose content a browser applies
+              only when scripting is OFF. See NOJS_STYLESHEET: it hides the
+              controls that cannot work without a script, leaving the standing
+              WhatsApp-and-phone block below as what a no-JS visitor sees. No
+              copy is added here — this element contains a CSS rule and nothing
+              else.
+            */}
+            <noscript dangerouslySetInnerHTML={{ __html: NOJS_STYLESHEET }} />
 
-            {/* A real form: native submit and Enter-key submit run this handler. */}
+            <p className={`mb-7 text-center text-gray-300 ${NOJS_HIDDEN_CLASS}`}>
+              {m.formSubtitle}
+            </p>
+
+            {/*
+              A real form: native submit and Enter-key submit run this handler.
+              `method="post"` is W16-C and is load-bearing even though scripting
+              never reads it: with no `action`, it makes a scriptless submit a
+              POST to this page — which `middleware.ts` refuses with 405 — rather
+              than the GET that wrote name, phone, email and message into the URL.
+              See NOJS_STYLESHEET for the measured URL and for the second, visible
+              half of that fix.
+            */}
             <form
+              method="post"
               onSubmit={handleSubmit}
               noValidate
               aria-busy={busy}
               aria-describedby={formDescribedBy}
-              className="space-y-4"
+              className={`space-y-4 ${NOJS_HIDDEN_CLASS}`}
             >
               {/*
                 THE HONEYPOT. Not a field, not for the visitor, and deliberately
@@ -954,8 +1033,9 @@ export function LeadForm({ m, locale }: LeadFormProps) {
               W13-A THE PRIVACY NOTICE. Rendered unconditionally and DELIBERATELY:
               the component itself decides, from the catalogue, whether there is
               anything to say, so this call site carries no second copy of that
-              rule. Today the three keys are unanswered and this renders NOTHING
-              — not an empty box, not a heading, not one byte. It sits after the
+              rule. W16-A answered every key, so this now renders the notice; with
+              any one key blank it renders NOTHING — not an empty box, not a
+              heading, not one byte. It sits after the
               fields and before the direct-contact block because that is where a
               visitor is when they have typed their details and have not yet
               submitted them, and it is announced from the form's

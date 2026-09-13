@@ -8,7 +8,11 @@
 //       NestedKeyOf<{a: string; b: {c: string}; xs: string[]}> -> 'string'
 //   An array value is not assignable to next-intl's `AbstractIntlMessages`, so
 //   ONE array-valued key anywhere collapses key typing for the entire catalogue
-//   to `string`. messages/he.json has 67 top-level keys, 10 of them arrays.
+//   to `string`. The argument needs only that AT LEAST ONE top-level key is an
+//   array, which has been true of messages/he.json since W1; the counts are a
+//   snapshot, MEASURED 2026-09-13 at 74 top-level keys, 10 of them arrays. (A
+//   previous count of 67 here had gone stale — do not trust a number in this
+//   file that does not carry the date it was measured.)
 //   A misspelled key therefore compiles. That is the customer's own defect class
 //   (W1 measured their `t: any` beside a declared `Translations` type that was
 //   never applied) wearing a different hat: a guarantee that cannot fail.
@@ -49,7 +53,7 @@
 //               (d) A NEW he-only key that is silently forgotten by the accessor.
 //                   `Messages` requires every `SOURCE_ONLY_SHAPE` key; spreading
 //                   a `catalogueSchema` result yields them as optional; so each
-//                   one must be explicitly filled in `resolve()` or THIS FILE
+//                   one must be explicitly filled in `load()` or THIS FILE
 //                   fails to compile. Adding a key to `SOURCE_ONLY_SHAPE` and
 //                   forgetting the fallback is a compile error, not a runtime
 //                   `undefined` in an `alt` attribute.
@@ -91,10 +95,14 @@
 //   4. STRINGS MAY BE EMPTY, deliberately, and the schema permits it. `""` is
 //      real customer data in `lectureItems[3]` (ledger OPEN 6), `stats[*].desc`
 //      and `testimonials[*].sub`. Adding `.min(1)` globally would fail the real
-//      catalogue, and weakening real data to satisfy a schema is forbidden. The
-//      exceptions are the ALT-TEXT values — `heroBadges[*].alt` and every value
-//      in `imageAlts` — where empty IS the failure mode, so `.min(1)` is applied
-//      to those values specifically and never globally.
+//      catalogue, and weakening real data to satisfy a schema is forbidden.
+//      `.min(1)` is applied to named positions only, never globally, and the
+//      list is exactly those where an empty string is itself the defect:
+//      `heroBadges[*].alt`, every value in `imageAlts`, and the five
+//      `privacy*` strings added by W16-A — 12 positions, MEASURED 2026-09-13
+//      by grepping `min(1)` in this file. For the alt values empty means an
+//      unnamed image; for the privacy values empty means a notice that
+//      renders blank with every test still green (see the block above them).
 //   5. ARRAY LENGTHS ARE NOT PINNED. The customer may add a fifth testimonial
 //      without a code change — intended. The consequence is that a "cleanup"
 //      deleting `lectureItems[3]` would pass this schema; the test file's
@@ -166,17 +174,31 @@ const testimonialSchema = z.strictObject({
 })
 
 /**
- * heroBadges — HEBREW-ONLY (ledger D-18). `alt` is `.min(1)` on purpose: these
- * are `<img alt>` values, and an empty alt is the accessibility failure the
- * source-locale fallback rule exists to prevent. It is the one string in this
- * catalogue that may not be empty.
+ * heroBadges — a SOURCE-ONLY key (ledger D-18). That is a statement about the
+ * SCHEMA, not about the data: the key MAY be absent from a non-source
+ * catalogue, and `load()` then supplies it, per key, from the source locale.
+ * It is NOT Hebrew-only. Each locale is served whatever IT supplies, falling
+ * back to the source locale only where the key is absent — read the mechanism
+ * rather than a snapshot, because the snapshot moves. (It has: messages/en.json
+ * carries its own three English badge alts as of W16-D, so `en` is served
+ * English here and this fallback does not fire. MEASURED 2026-09-13 through
+ * `getMessages` in both locales.)
+ *
+ * `alt` is `.min(1)` on purpose: these are `<img alt>` values, and an empty alt
+ * is the accessibility failure the source-locale fallback rule exists to
+ * prevent. It is not the only `.min(1)` position in the catalogue — see HONEST
+ * LIMIT 4 for the full list of 12.
  */
 const heroBadgeSchema = z.strictObject({
   alt: z.string().min(1),
 })
 
 /**
- * imageAlts — HEBREW-ONLY (ledger D-18), keyed by IMAGE BASENAME. The basename
+ * imageAlts — a SOURCE-ONLY key (ledger D-18), keyed by IMAGE BASENAME. Same
+ * mechanism as `heroBadges` above, and the same correction: this is not
+ * Hebrew-only. messages/en.json supplies its own six English values, so `en` is
+ * served English and the per-key fallback in `load()` does not fire for it.
+ * MEASURED 2026-09-13 through `getMessages` in both locales. The basename
  * is the key because it is already the contract between a section and its asset
  * (`/images/<basename>.webp`); keying by anything else would be a second naming
  * scheme for one fact.
@@ -215,7 +237,11 @@ const imageAltsSchema = z.strictObject({
 // ─── THE CATALOGUE SHAPE — stated once, in two halves ────────────────────────
 
 /**
- * Keys every locale must supply. 57 strings + 9 arrays + `notFound`.
+ * Keys every locale must supply: every top-level key of messages/he.json except
+ * the two in SOURCE_ONLY_SHAPE. That is 62 strings + 9 arrays + `notFound`,
+ * MEASURED 2026-09-13. (A previous count of 57 strings here predated the five
+ * `privacy*` keys W16-A added, and went stale unnoticed. If you edit this
+ * object, re-measure this line or delete the number.)
  * Order mirrors messages/he.json so the two can be diffed by eye.
  */
 const COMMON_SHAPE = {
@@ -292,6 +318,19 @@ const COMMON_SHAPE = {
   formDirect: z.string(),
   required: z.string(),
 
+  // W16-A THE PRIVACY NOTICE. `.min(1)`, not bare `z.string()`, and that is the
+  // whole point: `components/sections/PrivacyNotice.tsx` renders NOTHING when any
+  // one of these is blank, so an empty string here would silently delete the
+  // notice from a served page with every test still green. `.min(1)` turns that
+  // into a catalogue that refuses to load, naming the key. The list of keys lives
+  // in PRIVACY_KEYS in that component; `i18n/__tests__/privacy-catalogue.test.ts`
+  // is what fails if this block and that list ever disagree.
+  privacyTitle: z.string().min(1),
+  privacyData: z.string().min(1),
+  privacyPurpose: z.string().min(1),
+  privacyRetention: z.string().min(1),
+  privacyContact: z.string().min(1),
+
   footerMemorial: z.string(),
   footerAge: z.string(),
   footerFriends: z.string(),
@@ -315,18 +354,26 @@ const COMMON_SHAPE = {
  * and is done. It is not a convention and not a comment — both schemas below are
  * DERIVED from it, so the list and the behaviour cannot drift apart.
  *
- * `heroBadges` is here because W3-B proved no English equivalent exists anywhere
- * in the customer's tree: these are unit designations — proper nouns. Inventing
- * English for them would be inventing a memorial fact. Duplicating the Hebrew
- * into en.json would be one fact in two places. So the Hebrew is served for both
- * locales, from one place: `resolve()` below.
+ * WHY THESE TWO MAY FALL BACK — and it is a rule about what this codebase is
+ * allowed to WRITE, not a claim about what the catalogues currently HOLD.
  *
- * `imageAlts` is here for the same reason, proved the same way: all six are
+ * `heroBadges` is here because W3-B proved no English equivalent existed
+ * anywhere in the customer's tree: these are unit designations — proper nouns.
+ * `imageAlts` is here for the same reason, proved the same way: all six were
  * literal Hebrew `alt` strings in the customer's components with no English
- * counterpart anywhere in that tree. A Hebrew `alt` on the English page is a
- * known, recorded limit; an INVENTED English description of a photograph of a
- * fallen soldier would be a fabricated memorial fact. The first is acceptable,
- * the second is not, so the Hebrew is served for both locales.
+ * counterpart. For both, an INVENTED English description — of a unit insignia,
+ * or of a photograph of a fallen soldier — would be a fabricated memorial fact.
+ * That is forbidden. Serving the source-locale string instead is a recorded,
+ * acceptable limit. Hence: absence is LEGAL for these two keys and for no
+ * others, and `load()` below fills them from the source locale.
+ *
+ * WHAT IS ACTUALLY SERVED TODAY IS NOT THAT. MEASURED 2026-09-13 through
+ * `getMessages` in both locales: messages/en.json now carries its own
+ * `heroBadges` (3 entries) and its own `imageAlts` (6 values), all English, so
+ * the `en` page is served English for both and NEITHER fallback line fires.
+ * Denominator: 2 source-only keys, 2 examined, 2 now supplied by `en`, 0
+ * currently falling back. This paragraph is a snapshot and will go stale; the
+ * paragraph above it is the rule and will not. Prefer the rule.
  */
 const SOURCE_ONLY_SHAPE = {
   heroBadges: z.array(heroBadgeSchema),
@@ -415,6 +462,22 @@ function fail(locale: Locale, error: z.ZodError): never {
  * The SOURCE locale is parsed with `resolvedSchema` (source-only keys REQUIRED),
  * every other locale with `catalogueSchema` (source-only keys optional). That
  * asymmetry is IMPOSSIBLE (c): the fallback target is proved to exist.
+ *
+ * THE LANGUAGE OF THESE TWO STRINGS IS DECIDED ON THE TWO `??` LINES BELOW, and
+ * nowhere else. Left side: the locale's own text, in the document's language.
+ * Right side: source-locale text embedded in a document of another language —
+ * and THAT is the only condition under which an `<img alt>` here needs a `lang`
+ * annotation at its render site (components/sections/Hero.tsx, `badgeLang`,
+ * which points back at this comment). Today neither `??` takes its right side:
+ * MEASURED 2026-09-13, `en` supplies both keys itself, so no annotation is owed
+ * and Hero renders none.
+ *
+ * HONEST LIMIT This fallback is SILENT and no test in this repository fails
+ * when it fires. A future locale that ships without `heroBadges` or `imageAlts`
+ * will be served source-locale alt text with no `lang`, and nothing will say
+ * so. Closing that means a test asserting per-locale coverage of
+ * SOURCE_ONLY_KEYS — which would also forbid the very fallback this object
+ * exists to permit, so it is a DESIGN decision, not a cleanup. Not taken here.
  */
 function load(locale: Locale): Messages {
   if (locale === SOURCE_LOCALE) {

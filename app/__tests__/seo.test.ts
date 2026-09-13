@@ -3,7 +3,8 @@
 //
 // ⚠️ WRITE-SET NOTE: this file is a SIXTH path, outside W5-B's five. The brief
 // required the assertions below AND required tests to live where the harness
-// collects them (`**/__tests__/**/*.test.{ts,tsx}` — vitest.config.ts:79), and no
+// collects them (`**/__tests__/**/*.test.{ts,tsx}` — `test.include` in
+// vitest.config.ts), and no
 // `__tests__` directory can be inside a file path. `app/__tests__/` is a NEW
 // directory owned by nobody (precedent: `app/[locale]/__tests__/`), so it
 // collides with no concurrent delegate. Reported to the seat.

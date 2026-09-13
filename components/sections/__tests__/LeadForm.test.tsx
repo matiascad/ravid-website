@@ -87,8 +87,7 @@
 //               because a fallback link that renders but carries nothing is a
 //               funnel that still loses the lead while every "is the link there"
 // assertion stays green. Edit applied to the fallback anchor's href
-//               (LeadForm.tsx:399 as the file stood then; LeadForm.tsx:423 after
-//               this delegate's comment-only header addition):
+//               (`whatsappLink(buildPrefill(m, values))` in LeadForm.tsx):
 //                   -  href={whatsappLink(buildPrefill(m, values))}
 //                   +  href={whatsappLink('')}
 //
@@ -107,7 +106,7 @@
 //
 //                 Error: the fallback href carries no prefill for the visitor:
 //                 https://wa.me/972503112243
-//                  ❯ decodedPrefill components/sections/__tests__/LeadForm.test.tsx:513:11 (:567 in the file as it now stands)
+//                  ❯ decodedPrefill components/sections/__tests__/LeadForm.test.tsx:513:11
 //
 //                  Test Files  1 failed (1)
 //                       Tests  7 failed | 9 passed (16)
@@ -353,7 +352,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { LeadForm } from '@/components/sections/LeadForm';
-import { SECTION_IDS, WHATSAPP_BASE_URL, whatsappLink } from '@/config/site';
+import { PHONE_DISPLAY, SECTION_IDS, WHATSAPP_BASE_URL, whatsappLink } from '@/config/site';
 import type { Messages } from '@/i18n/messages';
 
 /* ── Fixture: ASCII sentinels, one per key ────────────────────────────────── */
@@ -1429,3 +1428,64 @@ for (const shape of BODY_SHAPES) {
     expect(submitButton()).toBeEnabled();
   });
 }
+
+/* ── W16-C · No personal data may enter a URL when scripting is off ─────────
+ *
+ * MEASURED, before these tests existed, against the built server with Playwright
+ * and `javaScriptEnabled: false`. The submit produced, verbatim:
+ *   /he?hp_ref=&name=No+Js+Visitor&phone=0507654321
+ *      &email=nojs%40example.com&organization=&message=secret+message+text
+ * Two independent mechanisms close it, and each gets its own test, because a
+ * test that only checked the visible one would go on passing after someone
+ * deleted the structural one.
+ */
+
+test('W16-C-1. the form is a POST, so a scriptless submit cannot put fields in a URL', () => {
+  const { container } = renderForm();
+  const form = formElement(container);
+
+  // The attribute, not the IDL property: `form.method` normalises an absent
+  // attribute to 'get', which is exactly the state this assertion must catch.
+  expect(form.getAttribute('method')).toBe('post');
+  expect(form.getAttribute('action')).toBeNull();
+
+  // The five controls a visitor types into are all inside THIS form, so there is
+  // no second, GET-shaped form for them to belong to.
+  expect(screen.getAllByRole('textbox').every((c) => c.closest('form') === form)).toBe(true);
+});
+
+test('W16-C-2. a <noscript> rule hides the scripted controls, and adds no copy', () => {
+  const { container } = renderForm();
+  const noscript = container.querySelector('noscript');
+
+  if (noscript === null) throw new Error('LeadForm rendered no <noscript> element');
+
+  // What it contains is a stylesheet and NOTHING ELSE: no words, no aria-label,
+  // no title, no alt. Every character a visitor can read on the no-JS path comes
+  // from the catalogue, through the standing direct-contact block below.
+  expect(noscript.textContent).toContain('<style>');
+  expect(noscript.textContent).toContain('display:none');
+  expect(noscript.textContent).not.toContain('</p>');
+  expect(noscript.textContent).not.toContain('<a ');
+
+  // And the rule it carries names the classes actually on the form and on the
+  // sentence that tells a visitor to fill it in — a selector that matched
+  // nothing would be a stylesheet that hid nothing.
+  const rule = noscript.textContent ?? '';
+  const selector = rule.slice(rule.indexOf('.') + 1, rule.indexOf('{'));
+  expect(selector.length).toBeGreaterThan(0);
+  expect(formElement(container).classList.contains(selector)).toBe(true);
+  const subtitle = screen.getByText(M.formSubtitle);
+  expect(subtitle.classList.contains(selector)).toBe(true);
+});
+
+test('W16-C-3. the no-JS route out is the standing block, not something new', () => {
+  renderForm();
+
+  // It renders on a plain load — no script has run in this assertion's past
+  // beyond React's own render — and it is a bare href plus the phone number.
+  const standing = screen.getByTestId('form-direct-whatsapp');
+  expect(standing.getAttribute('href')).toBe(whatsappLink());
+  expect(standing).toHaveTextContent(PHONE_DISPLAY);
+  expect(screen.getByTestId('form-direct')).toHaveTextContent(M.formDirect);
+});

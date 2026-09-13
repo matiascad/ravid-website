@@ -51,7 +51,7 @@ const PHYSICAL_DIRECTION = /(?:^|[\s:])(?:ml|mr|pl|pr|left|right)-|(?:^|[\s:])te
 /** The portrait's basename — the key into `imageAlts` AND the file name. */
 const PORTRAIT_KEY = 'tuval-hero' as const
 
-/** The utility declared once at app/globals.css:108, bound to `--accent`. */
+/** The `.text-gold` utility declared once in app/globals.css, bound to `--accent`. */
 const ACCENT_CLASS = 'text-gold'
 
 describe('Hero', () => {
@@ -147,28 +147,27 @@ describe('Hero', () => {
     }
   })
 
-  it('annotates the source-locale badge alts only on a non-source locale', () => {
-    // The badge alts are Hebrew proper nouns in EVERY locale (ledger D-18), so on
-    // the English page their language context must be declared. That annotation
-    // is the one thing in this section that varies by locale.
-    const badgeContexts = (tree: HTMLElement) =>
-      he.heroBadges
+  it('never overrides the language of a badge alt, because each locale has its own', () => {
+    // W16-D INVERTED THIS TEST, and the inversion is the whole point. It used to
+    // assert `lang="he"` on the English page's badges, which was CORRECT while
+    // messages/en.json had no `heroBadges` and the English page was served the
+    // Hebrew alts by the source-locale fallback. en.json now carries its own
+    // English badge alts, so a `lang` override would misdeclare English text as
+    // Hebrew — a worse defect than the one the annotation closed.
+    const badgeContexts = (tree: HTMLElement, alts: ReadonlyArray<{ alt: string }>) =>
+      alts
         .map((badge) => tree.querySelector(`img[alt="${badge.alt}"]`)?.parentElement)
         .filter((wrapper): wrapper is HTMLElement => wrapper !== null && wrapper !== undefined)
 
     const { container: sourceTree } = render(<Hero m={he} locale={SOURCE_LOCALE} />)
-    const sourceBadges = badgeContexts(sourceTree)
+    const sourceBadges = badgeContexts(sourceTree, he.heroBadges)
     expect(sourceBadges).toHaveLength(3)
-    for (const badge of sourceBadges) {
-      expect(badge).not.toHaveAttribute('lang')
-    }
+    for (const badge of sourceBadges) expect(badge).not.toHaveAttribute('lang')
 
     const { container: englishTree } = render(<Hero m={en} locale="en" />)
-    const englishBadges = badgeContexts(englishTree)
+    const englishBadges = badgeContexts(englishTree, en.heroBadges)
     expect(englishBadges).toHaveLength(3)
-    for (const badge of englishBadges) {
-      expect(badge).toHaveAttribute('lang', SOURCE_LOCALE)
-    }
+    for (const badge of englishBadges) expect(badge).not.toHaveAttribute('lang')
   })
 
   it('takes its copy from the catalogue, not from the component', () => {
@@ -184,11 +183,18 @@ describe('Hero', () => {
     expect(englishHeading).toBe(en.heroTitle)
     expect(hebrewHeading).not.toBe(englishHeading)
 
-    // ...and the badge alts are the SAME in both, because they are proper nouns
-    // served from the source locale in every locale (ledger D-18).
+    // ...and the badge alts now DIFFER between the two, because W16-D gave the
+    // English catalogue its own. Each locale's badges must appear in that
+    // locale's render and NOT in the other's — the strictest form of "no string
+    // is baked into the component".
+    expect(en.heroBadges).not.toEqual(he.heroBadges)
     for (const badge of en.heroBadges) {
-      expect(hebrew.querySelector(`img[alt="${badge.alt}"]`)).not.toBeNull()
       expect(english.querySelector(`img[alt="${badge.alt}"]`)).not.toBeNull()
+      expect(hebrew.querySelector(`img[alt="${badge.alt}"]`)).toBeNull()
+    }
+    for (const badge of he.heroBadges) {
+      expect(hebrew.querySelector(`img[alt="${badge.alt}"]`)).not.toBeNull()
+      expect(english.querySelector(`img[alt="${badge.alt}"]`)).toBeNull()
     }
   })
 
@@ -205,7 +211,7 @@ describe('Hero', () => {
   })
 
   it('gives the gold accent to the dates and to nothing else', () => {
-    // `.text-gold` is a UTILITY (app/globals.css:108 -> `hsl(var(--accent))`),
+    // `.text-gold` is a UTILITY (app/globals.css -> `hsl(var(--accent))`),
     // not a design token — searching for a `--gold` token finds nothing and
     // concludes wrongly. The customer applies it to exactly one fact, the dates
     // (ravid_website1/src/components/HeroSection.tsx:48). Drop the class and the

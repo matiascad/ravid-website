@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>STATUS — after overnight #2 + deploy</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#FFFFFF;color:#14202B;font-family:"Segoe UI",Arial,Helvetica,sans-serif;font-size:15px}
+  .w{width:1240px;margin:0 auto;padding:22px}
+  h1{font-size:31px;margin:0 0 6px 0;color:#1B4F82;font-weight:800}
+  .src{font-size:13px;color:#5B6B7B;margin-bottom:18px}
+  .ovr{border:2px solid #C9781A;border-radius:10px;padding:16px 18px;display:flex;align-items:center;gap:18px;margin-bottom:20px}
+  .ovr .pct{font-size:42px;font-weight:800;color:#C9781A;min-width:130px;text-align:center}
+  .ovr .mid{flex:1}.ovr .t{font-weight:800;font-size:17px;text-align:center;margin-bottom:8px}
+  .track{height:16px;background:#E7ECF1;border-radius:8px;overflow:hidden;display:flex}
+  .f1{background:#1B7F3F}.f2{background:#C9781A}.f3{background:#B3261E}
+  .chips{margin-top:9px;font-size:13px;color:#33475B;text-align:center}
+  .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px}
+  .card{border:2px solid #D7DEE5;border-radius:10px;padding:14px 15px;position:relative}
+  .card.done{border-color:#1B7F3F}.card.warn{border-color:#C9781A}.card.bad{border-color:#B3261E}
+  .badge{position:absolute;top:-11px;left:14px;font-size:12px;font-weight:800;color:#FFF;padding:3px 9px;border-radius:10px}
+  .bd{background:#1B7F3F}.bw{background:#C9781A}.bb{background:#B3261E}
+  .ct{font-weight:800;font-size:17.5px;margin:2px 0 3px 0}
+  .cm{font-size:12.5px;color:#5B6B7B;margin-bottom:9px}
+  .row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .score{font-size:30px;font-weight:800}.score span{font-size:14px;color:#5B6B7B}
+  .stars{color:#C9781A;font-size:14px;letter-spacing:1px}
+  .sm{font-size:12.5px;color:#33475B}
+  ul{margin:8px 0 0 0;padding-inline-start:18px}
+  li{font-size:12.8px;margin-bottom:5px;line-height:1.4}
+  .panel{border:2px solid #1B4F82;border-radius:10px;padding:14px 15px;margin-bottom:18px}
+  .panel.red{border-color:#B3261E}
+  .pt{font-weight:800;font-size:18px;margin-bottom:10px;color:#1B4F82}.pt.red{color:#B3261E}
+  table{width:100%;border-collapse:collapse}
+  th{background:#1B3B5C;color:#FFF;font-size:12.5px;padding:8px 10px;text-align:left}
+  td{font-size:12.6px;padding:7px 10px;border-bottom:1px solid #E7ECF1;vertical-align:top}
+  tr:nth-child(even) td{background:#F7F9FB}
+  .r{color:#B3261E;font-weight:800}.o{color:#C9781A;font-weight:800}.g{color:#1B7F3F;font-weight:800}
+  code{font-family:Consolas,monospace;font-size:12px;background:#EEF2F6;padding:1px 4px;border-radius:3px}
+</style>
+</head>
+<body>
+<div class="w">
+
+  <h1>📊 STATUS — overnight #2 closed · pushed · LIVE verified · 13.9.2026</h1>
+  <div class="src">Run #2: W9→W15, 1h 19m + a 2m follow-up · ledger D-1..D-156 no gaps, 881 lines · tarball 184 files / 4.37 MB · commit <code>8bddb527</code> pushed → Vercel · production re-checked in a real browser minutes ago (both locales, hero, badges, CTA, new copy, wine order)</div>
+
+  <div class="ovr">
+    <div class="mid">
+      <div class="t">BUILD & VERIFY 100% · LIVE SITE CORRECT · <span class="r">FUNNEL STILL CLOSED — env vars unset, every enquiry 503</span></div>
+      <div class="track"><div class="f1" style="width:62%"></div><div class="f2" style="width:23%"></div><div class="f3" style="width:15%"></div></div>
+      <div class="chips">🟢 code + deploy done · 🟡 2 changes live that Ravid hasn't approved · 🔴 4 items still open, 3 touch bereaved families · 20 delegates · 17 false premises caught (16 in briefs + 1 in the ledger, self-found)</div>
+    </div>
+    <div class="pct">62<span style="font-size:20px">%</span></div>
+  </div>
+
+  <div class="grid">
+
+    <div class="card done"><div class="badge bd">✔ GATES</div>
+      <div class="ct">🧪 every gate green — build finally measured</div>
+      <div class="cm">seat-measured, not reported by the builder</div>
+      <div class="row"><div class="score g">10<span>/10</span></div><div><div class="stars">★★★★★★★★★★</div></div></div>
+      <ul>
+        <li><code>tsc --noEmit</code> exit 0 · <code>eslint</code> 106 files, 0/0</li>
+        <li><code>vitest</code> 42 files · <b>608 tests · 607 pass · 1 skip · 0 fail</b></li>
+        <li><code>npm run e2e</code> <b>6 passed (was 0 tests — the dead script is now real)</b></li>
+        <li>build ×2 exit 0, 0 ⚠, route-table hash identical <code>7a373a39687a44ca</code> = deterministic</li>
+      </ul>
+    </div>
+
+    <div class="card done"><div class="badge bd">✔ LIVE</div>
+      <div class="ct">🌐 production checked in a browser</div>
+      <div class="cm">the bg-gold lesson applied: computed, not claimed</div>
+      <div class="row"><div class="score g">6<span>/6 checks</span></div><div class="sm">ravid-speaks.com</div></div>
+      <ul>
+        <li>/he RTL · /en LTR · hero photo · 3 unit badges render · language switcher</li>
+        <li><b>CTA visible in both locales</b> — the new CSP did not kill a single style</li>
+        <li>Booker copy live · <b>wine block now after the form</b>, as designed</li>
+      </ul>
+    </div>
+
+    <div class="card done"><div class="badge bd">✔ HONESTY</div>
+      <div class="ct">🔬 it corrected its own ledger</div>
+      <div class="cm">D-130 was wrong · now D-156</div>
+      <div class="row"><div class="score g">9<span>/10</span></div><div class="stars">★★★★★★★★★☆</div></div>
+      <ul>
+        <li>The "stale pid holds .next" finding was an <b>inference recorded as fact</b>; lsof + /proc showed zero holders</li>
+        <li>Real cause: <b>three W14 verifiers building into one .next at once</b> — the run's own method</li>
+        <li>17th unverified premise of the run, and the first written into the ledger rather than a brief. §W14 row flipped NEWLY-FAILING → PASS</li>
+      </ul>
+    </div>
+
+    <div class="card bad"><div class="badge bb">🔴 BLOCKER</div>
+      <div class="ct">📮 enquiries still return 503</div>
+      <div class="cm">only you can fix this — no agent can see your host</div>
+      <div class="row"><div class="score r">0<span>/10</span></div><div class="sm">15 minutes</div></div>
+      <ul>
+        <li>Set <b><code>KV_REST_API_URL</code> + <code>KV_REST_API_TOKEN</code></b> on Vercel, then redeploy</li>
+        <li>⚠️ <b>Not webhook-only</b>: that path can return 201 with an id while nothing is persisted — invisible to you and to the visitor</li>
+        <li>Then submit one real test enquiry and confirm both the stored row and the email</li>
+      </ul>
+    </div>
+
+    <div class="card bad"><div class="badge bb">🔴 DUTY OF CARE</div>
+      <div class="ct">🤍 3 open items touch bereaved families</div>
+      <div class="cm">built but not wired / not closed</div>
+      <div class="row"><div class="score r">3<span>/10</span></div><div class="sm">W16 — one short wave</div></div>
+      <ul>
+        <li><b>§OPEN 19 privacy</b>: <code>PrivacyNotice.tsx</code> exists, <b>is not rendered</b> — confirmed absent on the live page. 3 edits; <code>i18n/messages.ts</code> is a strictObject, so a catalogue key without a schema key takes the site down</li>
+        <li><b>No read-back</b>: nothing in the repo ever reads a stored lead — a loss stays silent forever</li>
+        <li><code>text/plain</code> POSTs accepted from any page on the internet · JS off ⇒ name, phone, email, message <b>land in the URL</b></li>
+      </ul>
+    </div>
+
+    <div class="card warn"><div class="badge bw">🟡 RAVID</div>
+      <div class="ct">🙋 2 changes went live unapproved</div>
+      <div class="cm">both are one-line reverts</div>
+      <div class="row"><div class="score o">2</div><div class="sm">ask him today</div></div>
+      <ul>
+        <li><b>Section order</b>: the wine block now sits after the booking form — a deliberate departure from his shipped page, and the only change a visitor would notice</li>
+        <li><b>Headline</b>: "הרצאה לזכר <b>חלל צה״ל</b>" now describes his brother inside a selling line. 4 strings changed in total, all quoted in the dashboard</li>
+        <li>A delegate <b>declined</b> 2 of the 4 booker phrases — <span dir="rtl">הרצאה ליום הזיכרון</span> and <span dir="rtl">יום גיבוש חברה</span> have zero support in either repo; placing them would assert availability nothing documents</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="panel red">
+    <div class="pt red">▶️ DO THESE, IN THIS ORDER</div>
+    <table>
+      <tr><th>#</th><th>ACTION</th><th>WHO</th><th>TIME</th></tr>
+      <tr><td class="r">1</td><td>Vercel: set <code>KV_REST_API_URL</code> + <code>KV_REST_API_TOKEN</code> (+ Resend/GA if you have them) → redeploy → submit one real enquiry → confirm stored row AND email</td><td>you</td><td>15 min</td></tr>
+      <tr><td class="r">2</td><td>Ask Ravid: wine-after-form OK? · "חלל צה״ל" headline OK? · the 2 declined phrases? · instagram handle · English badge names · Hebrew 404 · English alt text</td><td>you</td><td>one message</td></tr>
+      <tr><td class="o">3</td><td><b>W16</b> — render the privacy notice (schema key + catalogue key together), lead read-back + loss alarm, reject <code>text/plain</code> cross-origin, form must never GET PII into the URL</td><td>Claude Code</td><td>~1 night</td></tr>
+      <tr><td class="o">4</td><td><code>kill 2604936</code> — stale next-server on :3861, its build dir was replaced beneath it</td><td>you</td><td>10 sec</td></tr>
+      <tr><td class="g">5</td><td>Repo hygiene: <code>dist/*.tar.gz</code> + the PNG/HTML reports went into git (6.4 MB pushed). Worth a .gitignore rule before it compounds</td><td>you</td><td>2 min</td></tr>
+    </table>
+  </div>
+
+</div>
+</body>
+</html>

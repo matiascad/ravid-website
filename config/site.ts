@@ -34,7 +34,8 @@
 //               customer answer (ledger §OPEN). It cannot prevent a component
 //               from hardcoding a duplicate; only the W7 grep gate can detect
 //               that. CONCRETELY, TODAY: `mailtoLink()` below EXISTS but is not
-//               yet CALLED — components/sections/Footer.tsx:158 still builds
+//               yet CALLED — `CONTACT_HREF` in components/sections/Footer.tsx
+//               still builds
 //               `mailto:` + PUBLIC_EMAIL itself, and that file is outside the
 //               write-set of the delegate that added the helper. So the second
 //               copy of the scheme prefix is live until Footer switches; the
@@ -80,11 +81,16 @@ export const WHATSAPP_BASE_URL = `https://wa.me/${PHONE_E164}` as const;
 
 /* ── Social ───────────────────────────────────────────────────────────────── */
 
-// OPEN 1 — one-edit item. Seeded from ravid_website1/src/components/FormSection.tsx:133. Answering this changes THIS LINE ONLY.
-export const INSTAGRAM_HANDLE = 'ravid_.t' as const;
+// OPEN 1 — ANSWERED 2026-09-13 by Mati (W16). Two spellings existed across the two
+// source repos: this file was seeded 'ravid_.t' from the customer's newest build
+// (ravid_website1/src/components/FormSection.tsx:133), while the older repo said
+// 'ravid._.t'. Mati ruled that 'ravid._.t' is the real account. The question is
+// CLOSED; this line remains the ONLY home of the handle.
+export const INSTAGRAM_HANDLE = 'ravid._.t' as const;
 
-/** OPEN 1 (derived half) — DERIVED from INSTAGRAM_HANDLE, so answering OPEN 1 is
- *  one edit, not two. Do NOT retype the handle here. Source: FormSection.tsx:133 */
+/** OPEN 1 (derived half) — ANSWERED with the line above (2026-09-13, by Mati).
+ *  DERIVED from INSTAGRAM_HANDLE, so the answer was one edit, not two.
+ *  Do NOT retype the handle here. Source: FormSection.tsx:133 */
 export const INSTAGRAM_URL = `https://instagram.com/${INSTAGRAM_HANDLE}` as const;
 
 /* ── Wine (external shop, wineandfriends.co.il) ───────────────────────────── */
@@ -180,7 +186,7 @@ export const DEFAULT_LOCALE: Locale = 'he';
  *   top       HeroSection.tsx:12
  *   story     StorySection.tsx:8
  *   form      FormSection.tsx:40
- *   copyright Footer.tsx:30
+ *   copyright ravid_website1/src/components/Footer.tsx:30
  */
 export const SECTION_IDS = {
   top: 'top',

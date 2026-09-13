@@ -240,8 +240,8 @@ export interface MetadataCopy {
  *
  * This is the fix for the old repo's defect, where app/layout.tsx held a second,
  * hand-typed copy of the hero words in `metadata` that could drift from the page
- * itself. Here the title IS the page's <h1> (Hero.tsx:240 renders `heroTitle`)
- * and the description IS the page's lede (Hero.tsx:244-245 renders
+ * itself. Here the title IS the page's <h1> (Hero's <h1> renders `heroTitle`)
+ * and the description IS the page's lede (Hero's lede renders
  * `heroSubtitle` then `heroSubtitle2` as two blocks of one sentence). One fact,
  * two views, no second copy — change the catalogue and both move together.
  *

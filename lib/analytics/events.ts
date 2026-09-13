@@ -126,9 +126,9 @@ export type ScrollDepth = (typeof SCROLL_DEPTHS)[number];
  * control is a lie the compiler cannot catch, so the list stays derived by
  * reading, and shrinks when a button is deleted.
  *
- *   hero_book   components/sections/Hero.tsx:262 — `<a href={anchor(form)}>`
- *   hero_story  components/sections/Hero.tsx:268 — `<a href={anchor(story)}>`
- *   why_book    components/sections/Why.tsx:159  — `<a href={FORM_HREF}>`
+ *   hero_book   components/sections/Hero.tsx — `<a href={anchor(SECTION_IDS.form)}>`
+ *   hero_story  components/sections/Hero.tsx — `<a href={anchor(SECTION_IDS.story)}>`
+ *   why_book    components/sections/Why.tsx — `<a href={FORM_HREF}>`
  *
  * The site's other controls are NOT `cta_click`: the four wine links are
  * `wine_click`, the two locale links are `lang_switch`, the form's own submit

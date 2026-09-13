@@ -175,76 +175,316 @@ import Link from 'next/link'
 
 import { DEFAULT_LOCALE, type Locale } from '@/config/site'
 import { getMessages } from '@/i18n/messages'
+// LOCALE_DIRECTION ONLY. It is a module constant — `Record<Locale,'rtl'|'ltr'>`,
+// total over the locale union — and it reads nothing from the request, which is
+// why the tripwire below deliberately does not ban this module outright (it bans
+// the navigation primitives from it, by name). This module is ALREADY in the
+// /he and /en graph via app/[locale]/layout.tsx and app/[locale]/page.tsx, so
+// this import adds no module to the prerender that was not already there —
+// asserted by disk and manifest in W16-FIX4 MEASURED below, not by reasoning.
+import { LOCALE_DIRECTION } from '@/i18n/routing'
 import { localePath } from '@/lib/seo'
 
-// ─── W13-B · THE ONE TYPED CONSTANT FOR THE ABSENT HEBREW 404 COPY ───────────
-// §OPEN — one-edit item: app/[locale]/not-found.tsx:NOT_FOUND_COPY_LOCALE below.
+// ─────────────────────────────────────────────────────────────────────────────
+// W16-D AMENDMENT · ONE LINE CHANGED, AND THE LINE IS BELOW. READ THIS FIRST.
 //
-// WHAT THIS IS. The locale the 404's WORDS ARE ACTUALLY WRITTEN IN — which is a
-// different fact from DEFAULT_LOCALE, the locale whose catalogue they are READ
-// FROM. Today those two disagree, and this constant is the one place that says
-// so out loud instead of letting a document announce itself in a language its
-// text is not in.
+// WHAT LANDED ELSEWHERE, that this file must answer for:
+//   HONEST LIMIT 1 and 2 above are now HISTORY, not fact. Hebrew 404 copy exists.
+//   MEASURED, raw catalogues, 2026-09-13, BEFORE:
+//     he.notFound and en.notFound were byte-identical and BOTH English — so the
+//     component's DEFAULT_LOCALE read and the shell's 'en' declaration agreed by
+//     ACCIDENT, not by construction. AFTER: messages/he.json carries Hebrew.
+//   HONEST LIMIT 2 predicted the exact consequence and it has arrived: this
+//   component reads DEFAULT_LOCALE ('he'), so EVERY 404 now renders in Hebrew,
+//   including /en/<missing>. That is not a new defect introduced here; it is the
+//   knowingly-priced behaviour of limit 2 becoming visible. It is reported, with
+//   its one structural fix, in HONEST LIMIT 11.
 //
-// MEASURED, not assumed (messages/he.json:196-200 and messages/en.json:185-189,
-// read on 2026-09-13): `notFound.title` / `.description` / `.backHome` are the
-// byte-identical English strings "404" / "Oops! Page not found" / "Return to
-// Home" in BOTH catalogues. Hebrew 404 copy does not exist in this project, in
-// the customer's build, or anywhere else. NO AGENT MAY AUTHOR IT.
+// WHAT IS FIXED HERE, and it is ledger D-137: `NOT_FOUND_COPY_LOCALE` was the
+//   LITERAL 'en' while the words came from `DEFAULT_LOCALE`. Two facts, two
+//   places, and nothing to notice when they diverged — which is precisely what
+//   just happened. It is now DERIVED from DEFAULT_LOCALE.
 //
-// THE ABSENT BRANCH, and why it is a branch and not a decoration: this value is
-// what app/not-found.tsx feeds to `lang` and `dir`. While it is 'en', a visitor
-// who 404s outside the locale tree gets a document declared English and LTR —
-// which is TRUE of the words on it. Before this constant existed that shell said
-// `lang="he" dir="rtl"` over English text, so a screen reader announced English
-// in a Hebrew voice and a translation engine saw a Hebrew document. The unset
-// state is therefore SAFE AND HONEST rather than merely quiet.
+// INVARIANT     The locale whose catalogue supplies the words on this page and
+//               the locale the root shell declares in `lang`/`dir` are THE SAME
+//               EXPRESSION, not two values a human keeps in step. Change
+//               DEFAULT_LOCALE and both move together.
 //
-// THE ONE EDIT THAT CLOSES IT. A human licensed to write this site's words
-// replaces messages/he.json's `notFound.*` with real Hebrew, and in the SAME
-// change sets the value below to DEFAULT_LOCALE. Two lines, one commit, and
-// HONEST LIMIT 2's "the day Hebrew 404 copy lands" stops being a trap: the
-// document's language annotation moves with the words instead of lagging them.
-// ⚠️ DO NOT flip this because the site's default locale is Hebrew. Flip it only
-// when the RENDERED STRINGS are Hebrew. It is typed `Locale`, so it cannot name
-// a locale this site does not serve; nothing else checks that it is true.
-// Consumed by the ROOT shell (app/not-found.tsx) for `lang`/`dir` — ONE FACT ONE
-// PLACE: that shell states no locale of its own.
-export const NOT_FOUND_COPY_LOCALE: Locale = 'en'
+// IMPOSSIBLE    A root-shell 404 whose `lang`/`dir` disagrees with the script of
+//               its own words. There is no longer a second value to get wrong:
+//               `getMessages(DEFAULT_LOCALE)` and `NOT_FOUND_COPY_LOCALE` are the
+//               same fact, spelled once. Before this edit, flipping either one
+//               alone compiled, tested green, and shipped a mismatch.
+//
+// CLASS         This file's own copy-locale fact, for every locale. It does NOT
+//               close the class of "the served document declares the right
+//               language" — see HONEST LIMIT 5 above and 11 below. INSTANCE.
+//
+// HONEST LIMIT 11. ⚠️ SUPERSEDED BY W16-FIX4 — DO NOT READ THE TEXT BELOW AS A
+//               DESCRIPTION OF WHAT SHIPS. It said: "/en/<missing> NOW RENDERS
+//               HEBREW WORDS ... NOT closed by this edit ... the fix is the
+//               structural one already named in HONEST LIMIT 3 [root-params]."
+//               HALF OF THAT IS STILL TRUE and half was a category error. STILL
+//               TRUE: /en/<missing> renders Hebrew words, and this file still
+//               cannot know it is on /en. FALSE: that the ONLY remedy was to
+//               learn the request locale. The harm named was that assistive
+//               technology would read Hebrew in an English voice — that is a
+//               LANGUAGE-ANNOTATION defect, and annotating the PART needs no
+//               locale detection at all. See W16-FIX4 below and HONEST LIMIT 14
+//               for what is closed and what is not.
+//
+// ─────────────────────────────────────────────────────────────────────────────
+// W16-FIX1 AMENDMENT · NO LINE OF THIS COMPONENT CHANGED, AND THAT IS THE RESULT.
+//
+// This delegate was sent to close HONEST LIMIT 11. It did not. It re-measured the
+// evidence, measured the remedy limit 11 names, found that remedy DOES NOT EXIST
+// AT THIS VERSION, and is recording that instead of shipping a worse fix. What
+// follows is the correction of a claim in this file that was true when written
+// and is false now - left uncorrected, it would cost the next delegate its whole
+// budget rediscovering it.
+//
+// 1. MEASURED 1 STILL HOLDS - RE-VERIFIED, NOT INHERITED. Isolated build rig,
+//    Next 15.5.25, ONE variable changed (a `getLocale()` call added to this
+//    file) against an otherwise identical tree:
+//        he.html / en.html on disk     PRESENT  ->  ABSENT
+//        prerender-manifest routes     7        ->  4  (/he, /en, /_not-found gone)
+//        /_not-found in the route table    circle  ->  f
+//        the route table for /[locale]     bullet  ->  bullet   UNCHANGED
+//    THE LAST ROW IS THE ONE TO READ. The build still printed the SSG bullet and
+//    still listed /he and /en beneath it while neither was prerendered. So option
+//    (a), a request-scoped locale read here, is FORBIDDEN on this version - and
+//    `next build`'s own route table is not a witness that would have told us.
+//    A tripwire on the CAUSE now exists in this file's test (W16-FIX1 block).
+//
+// 2. ⚠️ HONEST LIMIT 3 / 11 NAME A REMEDY THAT IS NOT AVAILABLE. Both say: make
+//    app/[locale]/layout.tsx the root layout so `next/root-params` yields the
+//    locale with no request read. MEASURED in the installed Next 15.5.25:
+//      · `next/root-params` is refused by a webpack invalid-import rule -
+//        "can only be imported when `experimental.rootParams` is enabled"
+//        (build/webpack-config.js:2241). That is a next.config.js edit.
+//      · the fallback `unstable_rootParams()` warns, in this version, that it
+//        "is deprecated and will be removed in an upcoming major release".
+//      · its `case 'prerender-client'` branch THROWS an InvariantError saying the
+//        API "must not be used within a client component" - and per the warning at
+//        the top of this file, this component IS a client boundary's prop.
+//    So the structural fix is not one file move. It is a file move PLUS an
+//    experimental config flag PLUS a deprecated-or-flagged API whose own source
+//    forbids the position this component occupies. That is not landable safely in
+//    one delegate's budget with three siblings writing this repo, and it is not
+//    landable at all from this write-set. HONEST LIMIT 3 and 11 should be read
+//    with this paragraph attached.
+//
+// 3. THE REGRESSION, MEASURED ON THE WIRE rather than taken on report. Production
+//    build, this delegate's own server, port of its own choosing:
+//        GET /he/nope  404   Hebrew body           English 404 strings: absent
+//        GET /en/nope  404   Hebrew body           English 404 strings: absent
+//        GET /he       200   GET /en  200          both still prerendered
+//    Both 404s carry `<meta name="robots" content="noindex">` and both begin
+//    `<html id="__next_error__">` - NO lang and NO dir in the served bytes at all,
+//    exactly as app/not-found.tsx HONEST LIMIT 2 and limit 5 above state.
+//
+// 4. WHY DEFER RATHER THAN OPTION (b), CLIENT-SIDE SELECTION. Priced, not dodged.
+//    This component is the client boundary's prop, so its chunk loads on EVERY
+//    render of /he and /en - client selection puts JS on the two content pages,
+//    which are the product, to correct an edge case. It leaves the SERVED bytes
+//    Hebrew regardless, on a page that is already noindex, so the only reader it
+//    helps is one that runs JS. And it BREAKS D-137: the moment the words flip to
+//    English after hydration, the lang/dir the shell declared no longer describe
+//    them, so it would have to mutate documentElement - racing Next's own
+//    application of the RSC payload. A fix that opens new problems steps UP a
+//    level; up is (2) above, and (2) is blocked. NOT CLOSABLE AT THIS LEVEL.
+//
+// 5. ⚠️ WHICH 404 IS WORSE FOR THIS SITE, said plainly, because the answer decided
+//    this. `/` redirects to /he and this site's audience is Hebrew. BEFORE
+//    tonight every visitor got an ENGLISH 404 - the majority, in the wrong
+//    language, under a document announcing `lang="he" dir="rtl"` over English
+//    prose. AFTER tonight the MINORITY - /en visitors - get a Hebrew 404 under a
+//    document whose declared language matches its own words. Neither is correct.
+//    The one shipping now is the LESS wrong of the two for this site, and it is
+//    the first time /he has been right at all. That is why reverting is refused
+//    and why spending an architectural risk budget on it tonight is refused.
+//
+// 6. ⚠️ D-137 ON /en/nope IS NOT-MEASURED, AND THE BRIEF'S READING OF IT MAY BE
+//    WRONG. The brief states /en/nope is `lang="he" dir="rtl"` over Hebrew,
+//    internally consistent. MEASURED in the served payload: /he/nope carries
+//    he/rtl and NOTHING ELSE, but /en/nope carries BOTH he/rtl (this project's
+//    root shell) AND en/ltr (the [locale] layout's html, from the render Next
+//    discards). Which pair survives hydration is not decidable from bytes and was
+//    NOT measured here - no browser was driven. If en/ltr wins, the hydrated
+//    /en/nope announces English over Hebrew words and D-137 is OPEN there, not
+//    resolved. This is the first thing the next delegate should measure.
+//
+// INVARIANT     Unchanged and re-verified: this file reads nothing from the
+//               request, and the locale of its words and the locale the shell
+//               declares remain ONE expression (`NOT_FOUND_COPY_LOCALE =
+//               DEFAULT_LOCALE`). This amendment adds no second fact to keep in
+//               step, because it adds no code.
+// IMPOSSIBLE    A request-scoped read entering EITHER not-found boundary without
+//               a red test. That was previously invisible - green build, green
+//               suite, route table still printing the bullet (see 1). It is now a
+//               source-scan assertion over both boundary files.
+// CLASS         PARTIAL. The import tripwire is a DERIVATION over both boundary
+//               files and any future edit to them. The defect this delegate was
+//               SENT for - /en/<missing> rendering Hebrew - is THIS INSTANCE and
+//               is NOT closed. Do not read the green suite as its closure.
+// HONEST LIMIT 12. ⚠️ PARTLY SUPERSEDED BY W16-FIX4. Its first sentence — "THIS
+//               DELEGATE CHANGED NO BEHAVIOUR ... every word of limit 11 still
+//               describes what ships" — was true of W16-FIX1 and is FALSE now:
+//               the served markup changed, measured in a browser (W16-FIX4
+//               MEASURED). Its list (i)–(iv) of "what would actually close it"
+//               remains accurate for the SC 3.1.1 half and is still owed. The
+//               original text follows, unedited, for the record.
+//               THIS DELEGATE CHANGED NO BEHAVIOUR. /en/<missing> still
+//               renders Hebrew, and every word of limit 11 still describes what
+//               ships. What changed is that limit 11's named remedy is now known
+//               to be unavailable (2), the evidence forbidding option (a) is now
+//               first-hand (1), and the failure mode is now caught by a test (the
+//               tripwire). REVERSAL COST of what landed: delete one describe block
+//               from app/[locale]/__tests__/not-found.test.tsx and this comment.
+//               No runtime code, no bytes, no route. WHAT WOULD ACTUALLY CLOSE IT,
+//               in order: (i) `experimental.rootParams: true` in next.config.js,
+//               (ii) app/layout.tsx retired to _legacy/ so app/[locale]/layout.tsx
+//               becomes the root layout, (iii) this file reading the locale from
+//               `next/root-params`, (iv) a build-artefact gate asserting he.html
+//               and en.html exist, because per (1) the route table will not say.
+//               Items (i) and (iv) were outside this delegate's write-set; (ii)
+//               was inside it and was refused on risk, measured in (2).
+//              13. THE TRIPWIRE SCANS IMPORT STATEMENTS, NOT SEMANTICS. An
+//               indirect read through a helper module, or a dynamic import, passes
+//               it. It catches the way this defect has actually arrived twice; it
+//               is not a proof of absence. The ESLint half named in HONEST LIMIT 4
+//               is still owed and is still not writable from here.
+//               ⚠️ W16-FIX4 ADDENDUM, and it makes this limit LOAD-BEARING rather
+//               than academic: this file now imports `@/i18n/routing`, a module
+//               whose OTHER exports (`Link`, `redirect`, `usePathname`,
+//               `useRouter`) are exactly the request readers MEASURED 4 forbids.
+//               The tripwire's third assertion catches those BY NAME on the same
+//               import line; it does not and cannot catch a later edit that
+//               reaches them through an alias or a re-export. The ESLint
+//               `no-restricted-imports` entry of HONEST LIMIT 4 should now be
+//               written as a PATH-scoped rule allowing only `LOCALE_DIRECTION`
+//               from that module in `app/**/not-found.tsx`. Still not writable
+//               from here.
+// ─────────────────────────────────────────────────────────────────────────────
+// W16-FIX4 · THE LANGUAGE OF THE PART. ONE ATTRIBUTE PAIR, ON THE ELEMENT THAT
+// ALREADY EXISTED. This is the THIRD fix at this spot, so it is written as a
+// replacement of the unit's reasoning, not as another guard laid over the last.
+//
+// THE DEFECT, REPRODUCED IN A REAL BROWSER BEFORE ANYTHING WAS TOUCHED. Chromium
+// via Playwright, driven against THIS repo's production build served by
+// `next start` on a port confirmed bound by `ss` and a 200 — not curl, not the
+// served bytes, but the HYDRATED DOM, because HONEST LIMIT 5 / W16-FIX1 (6)
+// left open which of the two <html> elements in the payload survives:
+//     /he/nope  404  <html lang="he" dir="ltr"->rtl>  h1/p/link: Hebrew (61 cp)
+//                    nearest-ancestor lang of the Hebrew <h1>:  html  lang="he"
+//     /en/nope  404  <html lang="en" dir="ltr">       h1/p/link: Hebrew (61 cp)
+//                    nearest-ancestor lang of the Hebrew <h1>:  html  lang="en"
+// SO: en/ltr WINS on /en/nope. W16-FIX1's limit (6) guessed right to flag it;
+// the guess resolves AGAINST the site. A screen reader on /en/<missing> was
+// told "this is English" and handed Hebrew — WCAG 2.2 SC 3.1.1 failure, on the
+// 404 page of a memorial. Note also `dir="ltr"` over Hebrew prose: the
+// direction was wrong as well as the language.
+//
+// WHY NOT THE TWO OBVIOUS FIXES — priced, then rejected, with reasons:
+//   (a) TRANSLATE, i.e. make /en render the English catalogue. It does not fix
+//       this. The component cannot learn which locale it is on without the read
+//       MEASURED 1 proves empties the prerender (he.html/en.html PRESENT→ABSENT,
+//       manifest 7→4, route table UNCHANGED). Translation changes WHICH words
+//       are wrong, never whether the document describes them.
+//   (b) FORCE `lang="he"` ON THE DOCUMENT. Wrong on its own terms and out of
+//       scope: the element that announces `en` on /en/nope is
+//       app/[locale]/layout.tsx's <html>, which is correct for /en's own chrome
+//       and is not in this write-set. Overriding it would trade a wrong 404
+//       annotation for a wrong annotation on the two content pages, which are
+//       the product.
+//   (c) CLIENT-SIDE SELECTION — already priced and rejected at W16-FIX1 (4),
+//       unchanged: JS on the two content pages to correct an edge case.
+// WHAT IS ACTUALLY WRONG is narrower than any of them: an element containing
+// Hebrew was not marked as Hebrew. WCAG 2.2 SC 3.1.2 (Language of Parts) is the
+// provision for exactly this, and it needs no locale detection — this component
+// knows STATICALLY that it renders NOT_FOUND_COPY_LOCALE's catalogue.
+//
+// INVARIANT     THE WORDS ON THIS PAGE AND THE LANGUAGE DECLARED OVER THEM ARE
+//               ONE EXPRESSION. `getMessages(NOT_FOUND_COPY_LOCALE)` supplies the
+//               text and `lang={NOT_FOUND_COPY_LOCALE}` /
+//               `dir={LOCALE_DIRECTION[NOT_FOUND_COPY_LOCALE]}` annotate the
+//               element that contains it — the same constant, three times, never
+//               a second value a human keeps in step. Change DEFAULT_LOCALE and
+//               words, lang and dir all move together, in the same render.
+//               This holds with NO knowledge of the request, so it holds
+//               identically on the prerender, on a real 404, and under every URL
+//               the boundary can be mounted on.
+//
+// IMPOSSIBLE    A text node of this page whose nearest `lang` ancestor disagrees
+//               with the catalogue the text came from — under ANY document
+//               shell, present or future, including Next's hardcoded
+//               `<html id="__next_error__">` which carries no lang at all. The
+//               annotation is now INSIDE the subtree this component owns, so no
+//               element above it can be wrong about this content; the worst an
+//               ancestor can do is be right about something else. There is no
+//               construction left that puts the words and their declaration in
+//               different files — which is what every previous fix at this spot
+//               attempted, and why each one failed when the shell changed.
+//
+// CLASS         THIS INSTANCE, honestly. The <main> here is the whole of this
+//               component's rendered output, so the rule covers 100% of the
+//               words this file can emit — but it is an attribute pair written
+//               once, not a derivation that forces the NEXT component rendering
+//               a fixed-locale catalogue to annotate itself. The derivation that
+//               would close the class is a `<LocalisedText locale>` primitive
+//               (or an ESLint rule pairing `getMessages(X)` with `lang={X}`);
+//               neither exists and neither is written here. DENOMINATOR: 1 of 1
+//               fixed-locale subtree in this file; 1 of an unknown number in the
+//               app — app/[locale]/error.tsx and global-error.tsx do not exist
+//               yet and would have the identical problem.
+//
+// HONEST LIMIT 14. ⚠️ SC 3.1.1 (LANGUAGE OF PAGE) IS STILL OPEN ON /en/<missing>.
+//               This closes SC 3.1.2, not 3.1.1: `<html lang="en">` still stands
+//               over a page whose only content is Hebrew. What that costs is
+//               narrow and should not be overstated — every text node is now
+//               correctly annotated, so a conforming screen reader switches
+//               voice on the content — but a tool that reads only the document
+//               element (a translation engine, a language-detection crawler, a
+//               reader that ignores part-level lang) still sees "en". Closing it
+//               needs the request locale, i.e. W16-FIX1 (2)'s blocked route
+//               (`experimental.rootParams` + root-layout move + `next/root-params`
+//               + a build-artefact gate) — none of it in this write-set, all of
+//               it still owed.
+//              15. ⚠️ THE WORDS ARE STILL HEBREW ON /en. NOT FIXED, NOT FIXABLE
+//               HERE, and now HARMLESS TO ASSISTIVE TECHNOLOGY rather than
+//               actively misleading to it. An English-speaking visitor who 404s
+//               under /en still cannot read the page. That is HONEST LIMIT 2's
+//               knowingly-priced cost and it is unchanged.
+//              16. `dir` ON <main> DOES NOT REACH THE SUSPENSE FALLBACK OR THE
+//               FIRST BYTES. Per HONEST LIMIT 5 and app/not-found.tsx limit 2,
+//               Next streams the 404's content into a suspense boundary under a
+//               hardcoded shell; with JS off the page is blank, so there is no
+//               text for this attribute to annotate and nothing is made worse.
+//               MEASURED here in the HYDRATED DOM, which is the only place this
+//               page has content at all.
+//              17. ⚠️ NOT MEASURED: a real screen reader. What was measured is
+//               the DOM fact assistive technology resolves against — the nearest
+//               `lang` ancestor of the actual Hebrew text node, walked up from
+//               the rendered <h1> in Chromium. No NVDA/VoiceOver/TalkBack was
+//               driven, and no claim about pronunciation is made from bytes.
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * W13-B: THE 404's OWN TITLE, and the defect it repairs.
- *
- * MEASURED BEFORE (live server, GET /he/nope and GET /en/nope, 2026-09-13):
- *   /he/nope → 404, and its <title> was byte-identical to GET /he's <title>
- *   /en/nope → 404, and its <title> was byte-identical to GET /en's <title>
- *              (that one reads: "In the end, everything will be okay")
- * The Hebrew title is deliberately NOT transcribed into this comment: this file
- * is under a Hebrew-codepoint scan and a quoted title is not worth weakening it.
- * i.e. every 404 under a locale advertised itself in a browser tab, a bookmark
- * and a search result as THE MEMORIAL PAGE. The title came from
- * app/[locale]/layout.tsx's `generateMetadata`, which the 404 inherits.
- * MEASURED AFTER, same two URLs: <title>404</title>.
- *
- * The word is NOT authored here. It is `notFound.title`, the string W7-FIX-E
- * transcribed from the customer's own NotFound.tsx:14, reached through the one
- * validated accessor — so the tab and the <h1> below cannot say different
- * things, and a missing key is a compile error rather than a literal
- * "notFound.title" in a bereaved family's search results.
- *
- * It is a MODULE CONSTANT, deliberately. Per the ⚠️ at the top of this file this
- * module is evaluated on every render of /he and /en; `getMessages` is a pure
- * synchronous read of a zod-validated catalogue with no request in scope, so
- * this costs the two content pages nothing and cannot de-optimise them.
- *
- * MEASURED that Next reads it at all: an `export const metadata` in a
- * `not-found.tsx` is not something Next's docs promise. A probe value was put
- * here, the live server was asked for /he/nope and /en/nope, and BOTH returned
- * the probe string as <title>. It works in this Next (15.5.25). See HONEST
- * LIMIT 9 for what that probe did NOT prove.
+ * THE locale whose words this 404 shows, and therefore the locale the root shell
+ * declares. DERIVED, not typed a second time: the component below reads
+ * `getMessages(DEFAULT_LOCALE)`, so any other value here is a lie about the page
+ * — which is exactly the ledger D-137 mismatch this line removes.
+ */
+export const NOT_FOUND_COPY_LOCALE: Locale = DEFAULT_LOCALE
+
+/**
+ * W13-B: THE 404's OWN TITLE. See HONEST LIMIT 9 and 10 above for what the probe
+ * that established this export did and did not prove. The word is not authored
+ * here: it is `notFound.title`, read through the one validated accessor, from the
+ * SAME locale the body below reads, so the tab and the <h1> cannot disagree.
  */
 export const metadata = {
-  title: getMessages(DEFAULT_LOCALE).notFound.title,
+  title: getMessages(NOT_FOUND_COPY_LOCALE).notFound.title,
 }
 
 export default function LocaleNotFound() {
@@ -252,10 +492,24 @@ export default function LocaleNotFound() {
   // the active locale is not readable here without a request-scoped read, and a
   // request-scoped read in this component is paid by every visitor to /he and
   // /en, not by the visitor who 404s. HONEST LIMIT 2 states the cost.
-  const notFound = getMessages(DEFAULT_LOCALE).notFound
+  const notFound = getMessages(NOT_FOUND_COPY_LOCALE).notFound
 
   return (
-    <main className="flex min-h-screen items-center justify-center ps-6 pe-6">
+    // `lang`/`dir` HERE, ON THE ELEMENT THAT HOLDS THE WORDS — not on <html>.
+    // This component knows STATICALLY which catalogue it renders
+    // (NOT_FOUND_COPY_LOCALE), and it cannot know which URL it is on without the
+    // request read that MEASURED 1 forbids. So it annotates the PART it is
+    // certain of (WCAG 2.2 SC 3.1.2) and leaves the PAGE-level declaration
+    // (SC 3.1.1) to whichever shell wins — `<html lang>` is not touched, and
+    // does not need to be, because a `lang` on an ancestor of the text node is
+    // what assistive technology resolves against. Both attributes are
+    // expressions over the SAME one constant, so they cannot drift from each
+    // other, and neither restates the copy locale — it is derived.
+    <main
+      lang={NOT_FOUND_COPY_LOCALE}
+      dir={LOCALE_DIRECTION[NOT_FOUND_COPY_LOCALE]}
+      className="flex min-h-screen items-center justify-center ps-6 pe-6"
+    >
       <div className="text-center">
         <h1 className="mb-4 text-4xl font-bold">{notFound.title}</h1>
         <p className="mb-4 text-xl">{notFound.description}</p>
@@ -266,7 +520,7 @@ export default function LocaleNotFound() {
           this link goes exactly where the words on this page are written, with no
           middleware redirect hop in between.
         */}
-        <Link href={localePath(DEFAULT_LOCALE)} className="underline">
+        <Link href={localePath(NOT_FOUND_COPY_LOCALE)} className="underline">
           {notFound.backHome}
         </Link>
       </div>

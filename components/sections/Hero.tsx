@@ -40,20 +40,24 @@
 //               in config/site.ts.
 //
 // HONEST LIMIT  Seven, stated plainly.
-//   1. THE PORTRAIT'S `alt` IS NOW DEDICATED — AND IT IS HEBREW IN EVERY LOCALE.
+//   1. THE PORTRAIT'S `alt` IS DEDICATED, AND IT IS NOW PER-LOCALE.
 //      The earlier stopgap (`m.heroSubtitle`, which a screen reader then heard
 //      twice) is GONE: the alt is `m.imageAlts['tuval-hero']`, a key transcribed
 //      into the catalogue from the customer's own build after this section was
 //      first written, schema-pinned at `.min(1)` and keyed by the image basename,
-//      so it is neither borrowed from a visible string nor invented here. What is
-//      NOT closed: `imageAlts` is source-locale-only (ledger D-18) and reaches the
-//      English page through the documented fallback in i18n/messages.ts, so that
-//      page serves a Hebrew `alt` with NO `lang` annotation — while the three
-//      badges beside it DO get one (see `badgeLang`). Annotating the portrait is
-//      one attribute on the wrapper below; it was outside the enumerated scope of
-//      the delegate that wired the alt, and Story.tsx cannot take the same
-//      treatment without breaking its documented locale-invariance, so both files
-//      were left consistent with each other. OWED TO THE SEAT, not decided here.
+//      so it is neither borrowed from a visible string nor invented here. THIS
+//      ITEM PREVIOUSLY SAID the alt was Hebrew in every locale, that the English
+//      page served it with no `lang` annotation, and that the badges beside it
+//      DID carry one. W16-FIX2 RE-MEASURED all three against the catalogue and
+//      all three are now FALSE: messages/en.json carries its own `imageAlts` AND
+//      its own `heroBadges`, the fallback in i18n/messages.ts is per-key
+//      (`file.imageAlts ?? …`), so a present key is never overridden, and no
+//      badge carries a `lang` in either locale (see `badgeLang`). The English
+//      page therefore serves an English portrait `alt` and needs no annotation,
+//      which VOIDS the "annotate the portrait" item formerly owed to the seat.
+//      STILL NOT CLOSED: nothing fails if a future locale omits either key — the
+//      per-key fallback is silent by design. Story.tsx was left untouched by this
+//      delegate and is NOT-MEASURED here.
 //   2. THE IMAGE BASENAMES ARE A CONTRACT WITH W6, NOT A DERIVATION. If W6 emits
 //      a different basename or a different extension, all four images 404 and
 //      nothing in this file, its test, or the type system notices.
@@ -87,7 +91,8 @@
 //   6. IT CHECKS SHAPE, NEVER TRUTH. That a date, a unit or a battalion number is
 //      CORRECT is not knowable here; the catalogue is trusted completely.
 //   7. THE GOLD ACCENT IS A UTILITY THIS FILE DOES NOT OWN. `.text-gold` is
-//      defined once, at app/globals.css:108, as `color: hsl(var(--accent))` — it
+//      defined once, by `.text-gold` in app/globals.css, as
+//      `color: hsl(var(--accent))` — it
 //      is a UTILITY, not a design token, which is why a search for a `--gold`
 //      token finds nothing and concludes wrongly that the accent is unavailable.
 //      It is applied to ONE fact, the dates, because that is where the customer's
@@ -110,7 +115,7 @@ import Image from 'next/image'
 import { TrackedLink } from '@/components/sections/TrackedLink'
 import { ctaClick } from '@/lib/analytics/events'
 import { anchor, SECTION_IDS, type Locale } from '@/config/site'
-import { SOURCE_LOCALE, type Messages } from '@/i18n/messages'
+import type { Messages } from '@/i18n/messages'
 
 /**
  * The catalogue slice this section consumes. DERIVED from `Messages` with
@@ -135,7 +140,17 @@ export type HeroMessages = Pick<
 
 export type HeroProps = {
   m: HeroMessages
-  /** The page's locale. Used for ONE thing — see `badgeLang` below. */
+  /**
+   * The page's locale. NOT READ BY THIS SECTION ANY MORE. Its one consumer was
+   * the badge `lang` override, which is gone (see `badgeLang`), and nothing else
+   * here branches on locale. It stays in the CONTRACT because the call site
+   * (the `<Hero>` element in app/[locale]/page.tsx) and this section's tests
+   * pass it, and because it
+   * is the input a re-introduced override would need; dropping it from the type
+   * would be a change to this section's CALLERS, not to this section. Accepted
+   * and deliberately unused — which is why the function below destructures `m`
+   * only.
+   */
   locale: Locale
 }
 
@@ -173,32 +188,41 @@ const META_CLASS =
 
 /**
  * The customer's gold accent on the dates (HeroSection.tsx:48). `.text-gold` is
- * a utility declared once in app/globals.css:108 and bound to `--accent`; this
+ * a utility declared once as `.text-gold` in app/globals.css and bound to
+ * `--accent`; this
  * file names it, it does not define a colour. See HONEST LIMIT 7.
  */
 const META_ACCENT_CLASS = 'text-gold'
 
-export function Hero({ m, locale }: HeroProps) {
+export function Hero({ m }: HeroProps) {
   /**
-   * The badge alts are served from the SOURCE locale in EVERY locale — they are
-   * proper nouns with no English equivalent anywhere in the customer's tree, so
-   * i18n/messages.ts resolves them through its documented source-locale fallback
-   * (ledger D-18; `heroBadges` is genuinely absent from messages/en.json).
+   * NO `lang` OVERRIDE ON A BADGE — and the reason is DATA, not style.
    *
-   * Consequence: on the English page these three `alt` strings are in a language
-   * the document is not. `lang` is what stops a screen reader announcing Hebrew
-   * with an English voice; on the source locale itself it would only restate the
-   * document language, so it is omitted.
+   * Until W16-D, messages/en.json carried no `heroBadges`, so the English page
+   * served the source-locale alt strings through the documented per-key fallback
+   * in i18n/messages.ts (ledger D-18), and an English document had to declare
+   * their language or a screen reader would voice them with English phonemes.
+   * en.json now carries its OWN badge alts — MEASURED, three entries, all
+   * English — so `m.heroBadges[i].alt` is always in the page's own language, and
+   * `lang="he"` on it would now be a LIE about the text beneath it: the same
+   * defect inverted. The override is held at `undefined` rather than deleted so
+   * that this constant, and the wrapper attribute it feeds, remain the ONE place
+   * a future locale's re-annotation would land.
    *
    * It is set on each badge's WRAPPER, not on the `<Image>`: next/image does not
    * forward a `lang` prop to the `<img>` it renders (measured in this repo's own
    * harness on next@15.5 — the prop is silently dropped). `lang` inherits to
    * descendants, so the wrapper delivers the same language context to the alt.
    *
-   * This is the ONLY thing in this section that varies by locale. Everything
-   * else flips through `dir` on <html> plus logical CSS, not through a branch.
+   * HONEST LIMIT If a FUTURE locale ships without its own `heroBadges`, the
+   * per-key fallback fires and this annotation must come back — and NO test in
+   * this repository fails when that happens; the fallback is silent by design
+   * (i18n/messages.ts). That condition belongs where the fallback is decided,
+   * not here; this comment is the pointer. Consequence for this section: NOTHING
+   * in it varies by locale any more — every locale renders identical markup and
+   * flips through `dir` on <html> plus logical CSS, never through a branch here.
    */
-  const badgeLang = locale === SOURCE_LOCALE ? undefined : SOURCE_LOCALE
+  const badgeLang: string | undefined = undefined
 
   /**
    * The four facts under the subtitle, in the customer's order. Exactly one of

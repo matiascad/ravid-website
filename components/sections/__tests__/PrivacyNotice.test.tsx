@@ -50,10 +50,12 @@ import { fileURLToPath } from 'node:url';
 import { LeadForm } from '@/components/sections/LeadForm';
 import {
   PrivacyNotice,
+  PRIVACY_KEYS,
   resolvePrivacyNotice,
+  type PrivacyKey,
   type PrivacyNoticeText,
 } from '@/components/sections/PrivacyNotice';
-import { LOCALES } from '@/config/site';
+import { LOCALES, mailtoLink, PUBLIC_EMAIL } from '@/config/site';
 import type { Messages } from '@/i18n/messages';
 
 /* ── Fixture: the form's seventeen real keys, ASCII sentinels ─────────────── */
@@ -100,15 +102,18 @@ const M: FormMessages = {
 };
 
 /**
- * A HYPOTHETICAL answer, so the path can be proved before Ravid gives a real
- * one. These are sentinels, not text: they are deliberately not sentences, so
- * nothing here can ever be mistaken for a privacy statement and copied into a
- * catalogue. No claim about data is made by any of the three.
+ * SENTINELS, NOT TEXT. The real notice now lives in messages/he.json and
+ * messages/en.json (W16-A) and is proved there and in the served bytes; what is
+ * proved HERE is the mechanism, so these stay deliberately un-sentence-like and
+ * no claim about data is made by any of the five. A test that asserted the real
+ * Hebrew would be a second copy of the copy.
  */
 const SEEDED: PrivacyNoticeText = {
   privacyTitle: 'PRIVACY-TITLE-SENTINEL',
   privacyData: 'PRIVACY-DATA-SENTINEL',
+  privacyPurpose: 'PRIVACY-PURPOSE-SENTINEL',
   privacyRetention: 'PRIVACY-RETENTION-SENTINEL',
+  privacyContact: 'PRIVACY-CONTACT-SENTINEL',
 };
 
 /**
@@ -130,7 +135,9 @@ const HEBREW_SAMPLE = String.fromCodePoint(0x05e9, 0x05dc, 0x05d5, 0x05dd);
 const SEEDED_HEBREW: PrivacyNoticeText = {
   privacyTitle: `${HEBREW_SAMPLE}-TITLE`,
   privacyData: `${HEBREW_SAMPLE}-DATA`,
+  privacyPurpose: `${HEBREW_SAMPLE}-PURPOSE`,
   privacyRetention: `${HEBREW_SAMPLE}-RETENTION`,
+  privacyContact: `${HEBREW_SAMPLE}-CONTACT`,
 };
 
 /* ── Helpers ──────────────────────────────────────────────────────────────── */
@@ -162,34 +169,56 @@ function honeypotInput(container: HTMLElement): HTMLElement {
 
 /**
  * The atomicity derivation. A privacy notice missing its retention line does not
- * read to a visitor as incomplete — it reads as COMPLETE, which makes the
+ * read to a visitor as incomplete - it reads as COMPLETE, which makes the
  * omission an implied claim that there is nothing further to say. So there must
  * be no input at all that renders part of a notice.
  *
- * All eight subsets of the three facts are enumerated below, plus the three
- * whitespace-only answers, and every one of them except the full answer must
- * produce the empty string.
+ * W16-A: the cases are now DERIVED from `PRIVACY_KEYS` rather than typed out, so
+ * this enumeration stays exhaustive for any future key list without an edit.
+ * Every proper subset of the facts is generated - 31 of them for five keys, up
+ * from the 7 a hand-written table carried for three - plus the all-blank answer,
+ * the all-whitespace answer, and one case per key where that single key is
+ * whitespace while every other is answered.
  */
-const PARTIAL_ANSWERS: ReadonlyArray<readonly [string, Partial<PrivacyNoticeText>]> = [
-  ['nothing answered - TODAY', {}],
-  ['title only', { privacyTitle: SEEDED.privacyTitle }],
-  ['data only', { privacyData: SEEDED.privacyData }],
-  ['retention only', { privacyRetention: SEEDED.privacyRetention }],
-  ['title and data, no retention', { privacyTitle: SEEDED.privacyTitle, privacyData: SEEDED.privacyData }],
-  [
-    'title and retention, no data',
-    { privacyTitle: SEEDED.privacyTitle, privacyRetention: SEEDED.privacyRetention },
-  ],
-  [
-    'data and retention, no title',
-    { privacyData: SEEDED.privacyData, privacyRetention: SEEDED.privacyRetention },
-  ],
-  ['all three present but blank', { privacyTitle: '', privacyData: '', privacyRetention: '' }],
-  [
-    'all three present but whitespace',
-    { privacyTitle: '   ', privacyData: '\t', privacyRetention: '\n ' },
-  ],
-];
+const PARTIAL_ANSWERS: ReadonlyArray<readonly [string, Partial<PrivacyNoticeText>]> = (() => {
+  const cases: Array<readonly [string, Partial<PrivacyNoticeText>]> = [];
+
+  const subsets = 2 ** PRIVACY_KEYS.length;
+  // `subsets - 1` is the mask with every bit set - the COMPLETE answer, the one
+  // input that must render. Every other mask is a partial and must render nothing.
+  for (let mask = 0; mask < subsets - 1; mask += 1) {
+    const answer: Partial<Record<PrivacyKey, string>> = {};
+    const present: string[] = [];
+
+    PRIVACY_KEYS.forEach((key, index) => {
+      if ((mask & (1 << index)) === 0) return;
+      answer[key] = SEEDED[key];
+      present.push(key);
+    });
+
+    cases.push([present.length === 0 ? 'nothing answered' : `only ${present.join(' + ')}`, answer]);
+  }
+
+  const everyKeySetTo = (value: string): Partial<PrivacyNoticeText> =>
+    Object.fromEntries(PRIVACY_KEYS.map((key) => [key, value])) as Partial<PrivacyNoticeText>;
+
+  cases.push(['all present but blank', everyKeySetTo('')]);
+  cases.push(['all present but whitespace', everyKeySetTo(' \t\n ')]);
+
+  for (const key of PRIVACY_KEYS) {
+    cases.push([`${key} whitespace, every other fact answered`, { ...SEEDED, [key]: '   ' }]);
+  }
+
+  return cases;
+})();
+
+test('0. the enumeration above is EXHAUSTIVE over the key list, not a sample', () => {
+  // Law 2, denominator: 2^5 - 1 proper subsets, + blank + whitespace + 5 single
+  // whitespace cases. If a key is added and this number is not, the count moves
+  // and this fails rather than silently testing a fraction of the space.
+  expect(PARTIAL_ANSWERS).toHaveLength(2 ** PRIVACY_KEYS.length - 1 + 2 + PRIVACY_KEYS.length);
+  expect(PRIVACY_KEYS.length).toBeGreaterThan(0);
+});
 
 test('1. unanswered or half-answered, the notice renders NOTHING - not one node', () => {
   for (const [label, answer] of PARTIAL_ANSWERS) {
@@ -235,7 +264,7 @@ test('2. with the keys unset the served form gains nothing, in every locale', ()
 
 /* ── 3. THE ANSWERED STATE — WHAT A READER ACTUALLY RECEIVES ──────────────── */
 
-test('3. answered, a reader receives all three sentences, in every locale', () => {
+test('3. answered, a reader receives EVERY sentence and the address, in every locale', () => {
   for (const locale of LOCALES) {
     const { unmount } = render(<LeadForm m={{ ...M, ...SEEDED }} locale={locale} />);
 
@@ -245,10 +274,22 @@ test('3. answered, a reader receives all three sentences, in every locale', () =
     // The TEXT, not the key. All three facts reach the reader, inside the one
     // region, in the order they were answered.
     const scope = within(notice);
-    expect(scope.getByText(SEEDED.privacyData)).toBeInTheDocument();
-    expect(scope.getByText(SEEDED.privacyRetention)).toBeInTheDocument();
+    for (const key of PRIVACY_KEYS) {
+      if (key === 'privacyTitle') continue; // the heading, asserted as the region's NAME above
+      expect(scope.getByText(SEEDED[key], { exact: false }), `${locale}: ${key} unreachable`).toBeInTheDocument();
+    }
+
+    // THE CONTACT ADDRESS. Reached by ROLE and ACCESSIBLE NAME - never a
+    // testid - and its href is the one builder config/site.ts permits. This is
+    // the whole reason the address is not a catalogue key: the notice and the
+    // footer cannot come to name different addresses.
+    const link = scope.getByRole('link', { name: PUBLIC_EMAIL });
+    expect(link).toHaveAttribute('href', mailtoLink());
+
+    // EXHAUSTIVE, and it stays exhaustive: every fact in order, then the space
+    // the render inserts, then the address. An extra or missing node fails here.
     expect(notice.textContent, `${locale}: a fact went missing from the notice`).toBe(
-      `${SEEDED.privacyTitle}${SEEDED.privacyData}${SEEDED.privacyRetention}`,
+      `${PRIVACY_KEYS.map((key) => SEEDED[key]).join('')} ${PUBLIC_EMAIL}`,
     );
 
     unmount();
@@ -266,9 +307,18 @@ test('4. answered, the notice is ASSOCIATED WITH THE FORM, not merely near it', 
   // precisely the failure an `aria-describedby` string comparison cannot see.
   //
   // A screen-reader user entering this form therefore hears all three facts.
-  expect(form).toHaveAccessibleDescription(new RegExp(SEEDED.privacyTitle));
-  expect(form).toHaveAccessibleDescription(new RegExp(SEEDED.privacyData));
-  expect(form).toHaveAccessibleDescription(new RegExp(SEEDED.privacyRetention));
+  for (const key of PRIVACY_KEYS) {
+    expect(form, `${key} is not announced to the form`).toHaveAccessibleDescription(
+      new RegExp(SEEDED[key]),
+    );
+  }
+
+  // And the address is part of the DESCRIPTION, not merely part of the page: a
+  // screen-reader user entering this form hears where to write to be deleted.
+  expect(form.getAttribute('aria-describedby')).toContain('lead-form-privacy');
+  expect(form).toHaveAccessibleDescription(
+    new RegExp(PUBLIC_EMAIL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')),
+  );
 
   // The live region is still named first, so adding the notice APPENDED to what
   // the form already announced rather than replacing it.
@@ -282,6 +332,7 @@ test('5. answered in the Hebrew block, the exact characters reach the reader', (
     const notice = screen.getByRole('region', { name: SEEDED_HEBREW.privacyTitle });
     expect(notice.textContent).toContain(HEBREW_SAMPLE);
     expect(within(notice).getByText(SEEDED_HEBREW.privacyRetention)).toBeInTheDocument();
+    expect(within(notice).getByText(SEEDED_HEBREW.privacyContact, { exact: false })).toBeInTheDocument();
 
     unmount();
   }
@@ -299,8 +350,8 @@ test('5. answered in the Hebrew block, the exact characters reach the reader', (
 test('6. answered, the form still has FIVE labelled controls and one hidden trap', () => {
   const { container } = render(<LeadForm m={{ ...M, ...SEEDED }} locale="he" />);
 
-  // FIVE. The notice is a region with two paragraphs and a heading; none of them
-  // is a form control, and it did not become a sixth field.
+  // FIVE. The notice is a region with a heading, four paragraphs and one link;
+  // none of them is a form control, and it did not become a sixth field.
   const textboxes = screen.getAllByRole('textbox');
   expect(textboxes).toHaveLength(5);
 

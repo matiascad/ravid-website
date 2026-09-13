@@ -29,7 +29,8 @@
 // ── W7-FIX-A  THE `gold` TOKEN ───────────────────────────────────────────────
 // INVARIANT   Every `*-gold` utility a component names is emitted by THIS file
 //             and resolves to `--accent`, the one place the gold hue is defined
-//             (app/globals.css:70). `gold` is an ALIAS of `accent`, sharing its
+//             (the `--accent` token in app/globals.css). `gold` is an ALIAS of
+//             `accent`, sharing its
 //             variable byte-for-byte; there is no second gold value anywhere.
 // IMPOSSIBLE  `bg-gold`, `border-gold`, `ring-gold`, `focus:border-gold` and
 //             every other variant can no longer compile to nothing. Before this
@@ -44,7 +45,7 @@
 //             future `<property>-gold` in app/, components/ or config/ now
 //             resolves, in every variant, without a further edit here.
 // HONEST LIMIT  `text-gold` is now defined TWICE - here, and by hand at
-//             app/globals.css:108 inside `@layer utilities`. Both emit the
+//             `.text-gold` in app/globals.css inside `@layer utilities`. Both emit the
 //             identical declaration `color: hsl(var(--accent))`, so they cannot
 //             drift in VALUE, but they are two homes for one utility NAME. The
 //             globals.css copy is now redundant. Removing it is not this file's
@@ -100,7 +101,7 @@ const config = {
           foreground: 'hsl(var(--accent-foreground))',
         },
         // W7-FIX-A. The design's name for the accent, bound to the SAME variable
-        // (app/globals.css:70 `--accent: 40 60% 55%`). No second gold value: this
+        // (`--accent: 40 60% 55%` in app/globals.css). No second gold value: this
         // is an alias, not a colour. See the W7-FIX-A header note above.
         gold: 'hsl(var(--accent))',
         destructive: {

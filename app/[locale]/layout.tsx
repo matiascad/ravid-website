@@ -54,7 +54,7 @@
 //               3. [W5-B, CLOSED] The hardcoded locale-invariant title is gone.
 //                  Title and description are now READ from the catalogue via
 //                  `getMessages()` - they are the same two facts the page's own
-//                  <h1> and lede render (Hero.tsx:240, :244-245), so the share
+//                  <h1> and lede render (in `Hero`), so the share
 //                  preview cannot drift from the page's words. W5-B LIMIT: the
 //                  string 'Ravid Tzanani' that used to be the title has NO
 //                  catalogue key of its own (measured: `Ravid` appears in en.json

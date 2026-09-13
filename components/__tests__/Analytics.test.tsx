@@ -29,7 +29,8 @@
 //                  `<Analytics />` inside a dead branch, or a second import that
 //                  shadows the first. It is paired with a RESOLUTION assertion
 //                  (`typeof Analytics`) precisely because the text half alone is
-//                  the weaker half: app/__tests__/seo.test.ts:366 makes the same
+//                  the weaker half: the 'imports Analytics into the locale
+//                  layout' test in app/__tests__/seo.test.ts makes the same
 //                  text assertion and it PASSED for the entire window in which
 //                  components/Analytics.tsx did not exist — text cannot see a
 //                  missing module. The pair can.
@@ -166,7 +167,8 @@ describe('Analytics', () => {
     expect(layout).toMatch(/<Analytics\s*\/>/);
 
     // The half a text assertion cannot make: the module that specifier names
-    // RESOLVES and exports `Analytics`. seo.test.ts:366 makes the two text
+    // RESOLVES and exports `Analytics`. The 'imports Analytics into the locale
+    // layout' test in seo.test.ts makes the two text
     // assertions above and passed while this file did not exist at all.
     expect(typeof Analytics).toBe('function');
   });

@@ -1183,3 +1183,240 @@ describe('/api/lead with a method other than POST', () => {
     });
   }
 });
+
+/* ── 12 · W16-C · Guard 0: provenance and media type ──────────────────────────
+ *
+ * WHAT THIS SUITE IS FOR. Before it existed, both of these were measured GREEN
+ * against the built server — i.e. they worked, for an attacker:
+ *   POST with `Origin: https://evil.example`          -> 201 {"ok":true,"id":...}
+ *   POST with `Content-Type: text/plain;charset=UTF-8` -> 201 {"ok":true,"id":...}
+ * The second is the one that matters: `text/plain` is a CORS-safelisted content
+ * type, so that request needs no preflight and is issuable from ANY page on the
+ * internet. Every case below asserts the STATUS, the BODY CODE, and — for the
+ * refusals — that the store is still EMPTY, because "refused" means no record,
+ * not merely a different number.
+ *
+ * The `unstated` cases are deliberately asserted as ADMITTED. That is the
+ * decision recorded in the route's HONEST LIMIT 9, and a test that pins it is
+ * what stops a later edit from failing closed on a missing browser header and
+ * silently refusing a real enquiry.
+ */
+
+/** A POST whose provenance/media headers this suite controls exactly. */
+function postWithHeaders(extra: Record<string, string>, body?: string): Request {
+  requestCounter += 1;
+  const headers: Record<string, string> = {
+    'X-Forwarded-For': `client-${requestCounter}`,
+    'Idempotency-Key': `key-${requestCounter}`,
+    ...extra,
+  };
+  return new Request(ENDPOINT, {
+    method: 'POST',
+    headers,
+    body: body === undefined ? JSON.stringify(validLead()) : body,
+  });
+}
+
+describe('POST /api/lead from somewhere that is not this site', () => {
+  it('refuses a cross-site fetch and stores nothing', async () => {
+    configureMailer();
+    providerAccepts();
+
+    const response = await POST(
+      postWithHeaders({
+        'Content-Type': 'application/json',
+        Origin: 'https://evil.example',
+        'Sec-Fetch-Site': 'cross-site',
+      }),
+    );
+
+    expect(response.status).toBe(403);
+    expect((await bodyOf(response)).error).toBe('foreign_origin');
+    expect(arranged.records.size).toBe(0);
+    expect(arranged.calls.length).toBe(0);
+  });
+
+  it('refuses `same-site` and `none` as well as `cross-site`', async () => {
+    configureMailer();
+    providerAccepts();
+
+    for (const site of ['same-site', 'none', 'CROSS-SITE']) {
+      const response = await POST(
+        postWithHeaders({ 'Content-Type': 'application/json', 'Sec-Fetch-Site': site }),
+      );
+      expect(response.status).toBe(403);
+      expect((await bodyOf(response)).error).toBe('foreign_origin');
+    }
+
+    expect(arranged.records.size).toBe(0);
+  });
+
+  it('refuses a foreign Origin even when Sec-Fetch-Site is absent', async () => {
+    configureMailer();
+    providerAccepts();
+
+    const response = await POST(
+      postWithHeaders({ 'Content-Type': 'application/json', Origin: 'https://evil.example' }),
+    );
+
+    expect(response.status).toBe(403);
+    expect((await bodyOf(response)).error).toBe('foreign_origin');
+    expect(arranged.records.size).toBe(0);
+  });
+
+  it('refuses an Origin that is not a URL at all', async () => {
+    configureMailer();
+    providerAccepts();
+
+    const response = await POST(
+      postWithHeaders({ 'Content-Type': 'application/json', Origin: 'not-a-url' }),
+    );
+
+    expect(response.status).toBe(403);
+    expect(arranged.records.size).toBe(0);
+  });
+
+  it('refuses BEFORE reading the body, so no oversize or parse cost is paid', async () => {
+    configureMailer();
+    providerAccepts();
+
+    // Both of these would be 413 and 400 respectively if the guard ran later.
+    const oversize = await POST(
+      postWithHeaders(
+        { 'Content-Type': 'application/json', 'Sec-Fetch-Site': 'cross-site', 'Content-Length': '99999' },
+        JSON.stringify(validLead()),
+      ),
+    );
+    expect(oversize.status).toBe(403);
+
+    const unparseable = await POST(
+      postWithHeaders(
+        { 'Content-Type': 'application/json', 'Sec-Fetch-Site': 'cross-site' },
+        '{"name": "Dana", ',
+      ),
+    );
+    expect(unparseable.status).toBe(403);
+    expect(arranged.records.size).toBe(0);
+  });
+
+  it('ADMITS the site’s own form: Sec-Fetch-Site same-origin stores the lead', async () => {
+    configureMailer();
+    providerAccepts();
+
+    const response = await POST(
+      postWithHeaders({
+        'Content-Type': 'application/json',
+        Origin: 'http://localhost',
+        'Sec-Fetch-Site': 'same-origin',
+      }),
+    );
+
+    expect(response.status).toBe(201);
+    expect(arranged.records.size).toBe(1);
+  });
+
+  it('ADMITS an Origin whose host is the host the request was addressed to', async () => {
+    configureMailer();
+    providerAccepts();
+
+    const response = await POST(
+      postWithHeaders({ 'Content-Type': 'application/json', Origin: 'http://localhost' }),
+    );
+
+    expect(response.status).toBe(201);
+    expect(arranged.records.size).toBe(1);
+  });
+
+  it('ADMITS an Origin matching a forwarded host, so a CDN cannot forge a refusal', async () => {
+    configureMailer();
+    providerAccepts();
+
+    const response = await POST(
+      postWithHeaders({
+        'Content-Type': 'application/json',
+        Origin: 'https://ravid-speaks.example',
+        'X-Forwarded-Host': 'ravid-speaks.example',
+      }),
+    );
+
+    expect(response.status).toBe(201);
+    expect(arranged.records.size).toBe(1);
+  });
+
+  it('ADMITS a request that states no provenance at all — HONEST LIMIT 9', async () => {
+    configureMailer();
+    providerAccepts();
+
+    const response = await POST(postWithHeaders({ 'Content-Type': 'application/json' }));
+
+    expect(response.status).toBe(201);
+    expect(arranged.records.size).toBe(1);
+  });
+});
+
+describe('POST /api/lead with a body that is not JSON', () => {
+  it('refuses text/plain — the CORS-simple type — and stores nothing', async () => {
+    configureMailer();
+    providerAccepts();
+
+    const response = await POST(
+      postWithHeaders({ 'Content-Type': 'text/plain;charset=UTF-8' }),
+    );
+
+    expect(response.status).toBe(415);
+    expect((await bodyOf(response)).error).toBe('unsupported_media_type');
+    expect(arranged.records.size).toBe(0);
+    expect(arranged.calls.length).toBe(0);
+  });
+
+  it('refuses the other two content types an HTML form can produce', async () => {
+    configureMailer();
+    providerAccepts();
+
+    for (const type of ['application/x-www-form-urlencoded', 'multipart/form-data; boundary=x']) {
+      const response = await POST(postWithHeaders({ 'Content-Type': type }));
+      expect(response.status).toBe(415);
+      expect((await bodyOf(response)).error).toBe('unsupported_media_type');
+    }
+
+    expect(arranged.records.size).toBe(0);
+  });
+
+  it('refuses a non-empty body that names no content type at all', async () => {
+    configureMailer();
+    providerAccepts();
+
+    // The one way a cross-origin POST can carry arbitrary bytes with NO
+    // Content-Type header and still be a simple request: a Blob with an empty
+    // type. Absent is not `application/json`, so it is refused.
+    const response = await POST(postWithHeaders({}));
+
+    expect(response.status).toBe(415);
+    expect(arranged.records.size).toBe(0);
+  });
+
+  it('ADMITS application/json with the charset parameter fetch appends', async () => {
+    configureMailer();
+    providerAccepts();
+
+    const response = await POST(
+      postWithHeaders({ 'Content-Type': 'Application/JSON; charset=utf-8' }),
+    );
+
+    expect(response.status).toBe(201);
+    expect(arranged.records.size).toBe(1);
+  });
+
+  it('leaves the bodyless POST answering 400, not 415', async () => {
+    configureMailer();
+    providerAccepts();
+
+    // A request with no body has nothing to type. Typing it would have turned a
+    // pinned 400 into a 415 for no security gain: there is no forged lead in an
+    // empty body.
+    const response = await POST(new Request(ENDPOINT, { method: 'POST' }));
+
+    expect(response.status).toBe(400);
+    expect(arranged.records.size).toBe(0);
+  });
+});

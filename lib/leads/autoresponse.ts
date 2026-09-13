@@ -17,8 +17,8 @@
 //   is `null` — SEND NOTHING — never prose invented by a machine on a memorial
 //   site. Both blocks it composes are blocks the PRODUCT ALREADY COMPOSES, in
 //   this order, on the page the enquirer just left:
-//     `components/sections/LeadForm.tsx:403-404`  formSuccess / formSuccessDesc
-//     `components/sections/LeadForm.tsx:577-587`  formDirect  / PHONE_DISPLAY
+//     `components/sections/LeadForm.tsx`  formSuccess / formSuccessDesc
+//     `components/sections/LeadForm.tsx`  formDirect  / PHONE_DISPLAY
 //   So this is a re-serialisation of an existing screen into text, not a new
 //   piece of writing. (See HONEST LIMIT 1 for what that costs.)
 //

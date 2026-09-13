@@ -135,6 +135,20 @@ export const KV_SINK_NAME = 'kv';
 /** The key prefix. A ULID id after it sorts by arrival; see the header. */
 const KEY_PREFIX = 'lead:';
 
+/* ── What the READ path needs, re-exported so it is not restated ──────────── */
+// W16-B. Three names only. Nothing below this comment is read by `store()`, and
+// no line above it was changed: these exist so `../recover.ts` can address the
+// same keys in the same store WITHOUT a second copy of the prefix or the
+// variable names. A second copy is how a read path quietly looks in the wrong
+// place after a rename here. ONE FACT, ONE PLACE.
+
+/** The key prefix a stored lead actually lives under. Same string `store()` writes. */
+export const KV_LEAD_KEY_PREFIX = KEY_PREFIX;
+/** NAME of the store's URL variable. Never its value. */
+export const KV_URL_ENV_VAR_NAME = KV_URL_ENV_VAR;
+/** NAME of the store's token variable. Never its value. */
+export const KV_TOKEN_ENV_VAR_NAME = KV_TOKEN_ENV_VAR;
+
 /** What this REST API returns in `result` for an accepted `SET`. */
 const ACKNOWLEDGEMENT = 'OK';
 

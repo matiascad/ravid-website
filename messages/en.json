@@ -169,6 +169,11 @@
   "formSuccessDesc": "We'll get back to you as soon as possible",
   "formDirect": "Contact us directly:",
   "required": "*",
+  "privacyTitle": "What happens to your details",
+  "privacyData": "What is kept: the name, phone, email, organization name and message you wrote, the language of the page the enquiry was sent from, an identifying number the system generates, and the time the enquiry arrived. Your IP address is used for one minute only, to limit repeated submissions, and is not kept with the enquiry.",
+  "privacyPurpose": "Why: so we can get back to you about the lecture. The enquiry is saved in the site's enquiry store and sent by email to the enquiry mailbox through an external mail service. If you left an email address, a confirmation is sent to it as well.",
+  "privacyRetention": "How long: the system sets no expiry date for an enquiry and does not delete enquiries by itself.",
+  "privacyContact": "To ask for your details to be deleted, or with any question about them, write to",
   "footerMemorial": "In memory of Staff Sgt. Tuval Yaakov Tzanani z\"l",
   "footerAge": "Aged 20 at his fall • 21 Kislev 5784",
   "footerFriends": "And in memory of his friends Eitan Fish and Yakir Yedidia Shinkolvsky z\"l",
@@ -186,5 +191,26 @@
     "title": "404",
     "description": "Oops! Page not found",
     "backHome": "Return to Home"
+  }
+,
+  "heroBadges": [
+    {
+      "alt": "Barak Brigade (188) insignia"
+    },
+    {
+      "alt": "Golan Company"
+    },
+    {
+      "alt": "Sufa insignia"
+    }
+  ]
+,
+  "imageAlts": {
+    "tuval-hero": "Tuval",
+    "helmet-bird": "A bird perched on a helmet on a tank",
+    "soldier-landscape": "A soldier looking out over the landscape",
+    "lecture-soldiers": "A lecture to soldiers",
+    "israel-flag": "The flag of Israel",
+    "tank-friends": "Tuval, Eitan and Yakir, of blessed memory"
   }
 }

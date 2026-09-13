@@ -78,7 +78,7 @@
 //               the instance's life, and nothing at this layer can see that. The
 //               durability of a 201 is exactly the durability of whatever
 //               `resolveLeadSink` returned, and that is a deployment fact no test
-//               in this repo can prove. Eight further limits, deliberately:
+//               in this repo can prove. Ten further limits, deliberately:
 //               (0) THE 2xx IS NOT FULLY TYPE-FENCED. `created(...)` takes a
 //               `LeadId`, and `record.id` is also a `LeadId` and is in scope from
 //               the moment `createLeadRecord` runs — so a future edit writing
@@ -153,15 +153,75 @@
 //               `tabindex="-1"`, but this is mitigation, not proof. A trapped
 //               submission is logged so the fault is at least visible to an
 //               operator.
-//               (5) NO CSRF/CONTENT-TYPE/ORIGIN CHECK. Any origin may post JSON.
-//               The blast radius is a stored row and a mail to the site owner,
-//               never a state change on a user's behalf.
+//               (5) ⚠️ THIS LIMIT READ, VERBATIM: "NO CSRF/CONTENT-TYPE/ORIGIN
+//               CHECK. Any origin may post JSON. The blast radius is a stored row
+//               and a mail to the site owner, never a state change on a user's
+//               behalf." It is corrected in place rather than deleted, because
+//               the sentence was TRUE and MEASURED, and because its second half —
+//               the blast-radius argument — is still the reason this guard is a
+//               media-type check and not a session token.
+//               MEASURED ON THE BUILT SERVER BEFORE GUARD 0 EXISTED:
+//                 POST with `Origin: https://evil.example` -> 201
+//                 {"ok":true,"id":"01M2CSCED35DZB7P0B041A943S"}; POST with
+//                 `Content-Type: text/plain;charset=UTF-8` -> 201
+//                 {"ok":true,"id":"01M2CSCEEPFHR132GGS2YBN7XM"}. Both stored a
+//                 real record. `text/plain` is CORS-simple, so that second one is
+//                 reachable from ANY page on the internet with no preflight.
+//               WHAT IS CLOSED NOW: see `REQUIRED_CONTENT_TYPE` and
+//               `provenance`. WHAT IS NOT: limit 9.
 //               (6) NO RETRY AND NO QUEUE. A `transient` store failure is a 503
 //               and the request is over; recovery is the client's WhatsApp
 //               fallback. Nothing retries on the server.
 //               (7) NOT PROVED BY `npm run build` here (another delegate's gate),
 //               and the environment variable names read below are a runtime
 //               contract no unit test can prove a deployment satisfies.
+//               (8) THE FUNNEL DOES NOT COUNT A GUARD-0 REFUSAL. Every other
+//               refusal on this route calls `count(...)`; a 403 and a 415 do not,
+//               and that is a decision, not an omission. `lib/leads/log.ts` owns
+//               the outcome vocabulary and is outside this delegate's write-set,
+//               and not one of its eleven outcomes describes "a page that is not
+//               this site posted here" honestly — `refusedUnparseable` is
+//               documented as "(400). Not a submission", and reusing it would put
+//               a forged cross-site POST into a tally an operator reads as broken
+//               clients. The tallies stay about THIS SITE'S FORM. The cost is
+//               real and is stated rather than hidden: a sustained cross-origin
+//               flood is invisible on the funnel page and visible only in the
+//               rate limiter's 429s and the access log. The fix is one new
+//               outcome key in that file, by whoever owns it.
+//               (9) `Sec-Fetch-Site` AND `Origin` CAN BOTH BE ABSENT, AND THAT
+//               CASE IS ADMITTED. `provenance` returns a THIRD value, `unstated`,
+//               and it is deliberately not collapsed into either neighbour.
+//               WHY ADMIT. Failing closed here refuses every client that sends
+//               neither header. The beneficiary of a refusal is nobody: to reach
+//               the handler at all a caller must already have sent
+//               `Content-Type: application/json`, which no cross-site `<form>`
+//               can produce and which forces a preflight on any cross-origin
+//               `fetch`/XHR — and this route's OPTIONS answers 405 with no CORS
+//               headers, so that preflight fails and the POST is never sent.
+//               The only caller that can present JSON with no provenance headers
+//               is therefore a NON-BROWSER one — curl, a script — which has no
+//               victim's ambient authority to ride on in the first place, and
+//               which this endpoint holds nothing for: there is no cookie, no
+//               session and no credential here, so a forged lead from a script is
+//               SPAM, and spam is the honeypot's and the rate limiter's problem,
+//               not CSRF's.
+//               THE PRICE OF THE OTHER CHOICE, which is the expensive one: the
+//               refused party would be a real person. `Sec-Fetch-*` is a browser
+//               header a corporate proxy, a privacy extension or an ageing device
+//               may not send, and `Origin` on a SAME-origin POST is optional in
+//               older engines. A bereaved family trying to book a memorial
+//               lecture would get the failure UX for a request the server itself
+//               made impossible to distinguish from an attack — silently, with no
+//               way for anyone to learn it happened. A lost enquiry is not
+//               recoverable; an admitted script POST is one more row somebody
+//               deletes. So the guard refuses what is DEMONSTRABLY foreign and
+//               admits what is merely UNSTATED.
+//               WHAT THIS COSTS, precisely: a non-browser client that omits both
+//               headers and sends `application/json` still reaches the handler,
+//               exactly as it did before this guard existed. Guard 0 removes the
+//               BROWSER-DRIVEN cross-site class by construction; it does not and
+//               cannot authenticate a caller, and nothing short of a
+//               server-minted token in the page would.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { LEAD_TO_EMAIL_ENV_VAR } from '@/config/site';
@@ -247,6 +307,113 @@ const PROVIDER_ENDPOINT = 'https://api.resend.com/emails';
  * trying to impose. 16 KiB is four times the largest lead the field caps admit.
  */
 const MAX_BODY_CHARS = 16 * 1024;
+
+/* ── Guard 0: provenance — WHO sent this, and WHAT did they say it is ─────── */
+
+/**
+ * THE ONE MEDIA TYPE THIS ENDPOINT READS, and the whole of defect 1's closure.
+ *
+ * `application/json` is NOT a CORS-safelisted request content type (Fetch, "CORS-
+ * safelisted request-header": only `application/x-www-form-urlencoded`,
+ * `multipart/form-data` and `text/plain` are). Three consequences, and they are
+ * the reason this constant does more work than the origin check below:
+ *   · a cross-origin `fetch`/XHR carrying it is PREFLIGHTED, and this route's
+ *     `OPTIONS` answers 405 with no `Access-Control-Allow-Origin`, so the
+ *     browser never sends the POST at all;
+ *   · an HTML `<form>` CANNOT produce it — `enctype` admits exactly the three
+ *     safelisted types — so no cross-site form can reach this handler;
+ *   · and a `Blob` body with an empty `type`, which is the one way a simple
+ *     cross-origin POST can carry arbitrary bytes with NO `Content-Type` at all,
+ *     is refused here too, because an ABSENT type is not this type.
+ * That is why the check is on a header the honest client must send CORRECTLY,
+ * rather than on one it merely happens to send.
+ */
+const REQUIRED_CONTENT_TYPE = 'application/json';
+
+/**
+ * The type/subtype alone, case-insensitively. Parameters (`; charset=utf-8`,
+ * which `fetch` appends unbidden) are part of a legitimate header and must not
+ * make it fail; a different essence must.
+ */
+function isJsonContentType(header: string | null): boolean {
+  if (header === null) return false;
+  const essence = header.split(';', 1)[0]?.trim().toLowerCase() ?? '';
+  return essence === REQUIRED_CONTENT_TYPE;
+}
+
+/** The `Sec-Fetch-Site` value a submission from this site's own page carries. */
+const SAME_ORIGIN_SITE = 'same-origin';
+
+/** The host of a URL-shaped string, lowercased — or `null` if it is not one. */
+function hostOf(value: string): string | null {
+  try {
+    return new URL(value).host.toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The hosts this request was ADDRESSED to, as seen from inside the handler.
+ * Both entries are the same fact read through the two layers that can hold it —
+ * the URL Next routed on, and the forwarded host a proxy rewrote it from — so a
+ * deployment behind a CDN cannot turn an honest same-origin POST into a refusal
+ * merely because the internal `Host` differs from the public one.
+ */
+function addressedHosts(request: Request): readonly string[] {
+  const hosts: string[] = [];
+  const routed = hostOf(request.url);
+  if (routed !== null) hosts.push(routed);
+  const forwarded =
+    request.headers.get('x-forwarded-host')?.split(',')[0]?.trim().toLowerCase() ?? '';
+  if (forwarded !== '') hosts.push(forwarded);
+  return hosts;
+}
+
+/**
+ * `unstated` is a THIRD value on purpose, and collapsing it into either of the
+ * other two would be the bug. See HONEST LIMIT 9 for why it is ADMITTED.
+ */
+type Provenance = 'same-origin' | 'foreign' | 'unstated';
+
+/**
+ * Where this request says it came from.
+ *
+ * `Sec-Fetch-Site` FIRST, and it is the only signal consulted when present:
+ * the BROWSER computes it by comparing the initiator's origin against the
+ * target URL, so it is correct without this server knowing its own hostname —
+ * no `Host`, no `SITE_URL`, nothing to drift, nothing a proxy can rewrite into
+ * a false refusal. Only `same-origin` is admitted: `cross-site`, `same-site`
+ * (a sibling subdomain — this site has none that post) and `none` (a top-level
+ * user-initiated load, which cannot be a form's `fetch`) are all refusals.
+ *
+ * `Origin` SECOND, and only when `Sec-Fetch-Site` is absent — i.e. for a browser
+ * too old to send it, which is exactly the browser that still sends `Origin` on
+ * a cross-origin POST. A header that parses to no host is itself foreign.
+ *
+ * ⚠️ THE `Origin` ARM IS NOT A FALLBACK IN PRACTICE — IT IS THE PATH THE REAL
+ * FORM TOOK. Measured, the built server, Chromium driving the actual page and
+ * submitting the actual form, headers captured off the wire:
+ *   {"origin":"http://127.0.0.1:3977","content-type":"application/json"}
+ * — `Sec-Fetch-Site` ABSENT. A design that trusted `Sec-Fetch-Site` alone and
+ * failed closed without it would have answered that honest submission 403. This
+ * is why `addressedHosts` exists and why `unstated` is admitted: the header a
+ * specification says every modern browser sends is not the header that arrived.
+ * Do not simplify this function down to its first branch.
+ */
+function provenance(request: Request): Provenance {
+  const site = request.headers.get('sec-fetch-site');
+  if (site !== null) {
+    return site.trim().toLowerCase() === SAME_ORIGIN_SITE ? 'same-origin' : 'foreign';
+  }
+
+  const origin = request.headers.get('origin');
+  if (origin === null) return 'unstated';
+
+  const claimed = hostOf(origin);
+  if (claimed === null) return 'foreign';
+  return addressedHosts(request).includes(claimed) ? 'same-origin' : 'foreign';
+}
 
 /* ── Guard 1: the honeypot ────────────────────────────────────────────────── */
 
@@ -764,6 +931,14 @@ async function handleLead(
   const now = Date.now();
   const address = clientAddress(request);
 
+  // ── Guard 0a: provenance. FIRST, because it reads headers only: a forged
+  // cross-site submission is refused before it can cost a body read, a parse,
+  // or a slot in the rate limiter's window. `unstated` falls through — the
+  // decision, and both its prices, are HONEST LIMIT 9. ────────────────────
+  if (provenance(request) === 'foreign') {
+    return failure(403, 'foreign_origin');
+  }
+
   // ── Guard 4: the size cap, BEFORE the body is read ──────────────────────
   const declaredLength = Number(request.headers.get('content-length') ?? '');
   if (Number.isFinite(declaredLength) && declaredLength > MAX_BODY_CHARS) {
@@ -792,6 +967,17 @@ async function handleLead(
   if (raw.length > MAX_BODY_CHARS) {
     await count(LEAD_OUTCOME.refusedOversize, LOCALE_UNKNOWN);
     return failure(413, 'body_too_large');
+  }
+
+  // ── Guard 0b: the media type. AFTER the read and the cap, and only for a
+  // body that EXISTS. A bodyless POST has nothing to type, and typing it would
+  // turn this route's long-standing 400 for an absent body into a 415 — a
+  // pinned outcome changed for no security gain, since a bodyless request
+  // carries no forged lead. A NON-EMPTY body must name itself, and must name
+  // itself JSON: that is the check a cross-site `<form>` and a `text/plain`
+  // POST cannot pass. The read it pays for is already bounded twice above. ──
+  if (raw !== '' && !isJsonContentType(request.headers.get('content-type'))) {
+    return failure(415, 'unsupported_media_type');
   }
 
   let body: unknown;

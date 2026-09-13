@@ -113,8 +113,13 @@ describe('denominators', () => {
     // three kinds the schema models. This fails the moment a fourth kind appears.
     expect(strings.length + arrays.length + objects.length).toBe(heKeys.length)
 
-    // en.json is he.json minus exactly the source-only keys (derived, not counted).
-    expect(enKeys.length).toBe(heKeys.length - SOURCE_ONLY_KEYS.length)
+    // W16-D: en.json now SUPPLIES every source-only key with its own English.
+    // SOURCE_ONLY_KEYS still names which keys MAY be absent — that is the
+    // fallback contract for any future locale — but 'en' no longer exercises it,
+    // so the two catalogues carry the same key set. The subtraction is kept as a
+    // FLOOR: en may never hold fewer than he-minus-the-optional-keys.
+    expect(enKeys.length).toBeGreaterThanOrEqual(heKeys.length - SOURCE_ONLY_KEYS.length)
+    expect(enKeys.length).toBe(heKeys.length)
     expect(countLeaves(HE)).toBeGreaterThan(0)
     expect(countLeaves(EN)).toBeGreaterThan(0)
   })
@@ -131,8 +136,12 @@ describe('the real catalogues', () => {
     expect(countLeaves(HE)).toBeGreaterThanOrEqual(100)
   })
 
-  itWhenLanded('2 · en.json validates with heroBadges legitimately absent', () => {
-    expect(HE_ONLY_KEY in EN).toBe(false)
+  itWhenLanded('2 · en.json validates with heroBadges present in its own English', () => {
+    // W16-D inverted this premise: the key used to be ABSENT and fall back to
+    // Hebrew. It is now PRESENT with English of its own. `catalogueSchema` marks
+    // it optional, so BOTH states validate — which is the point of the schema and
+    // is why this assertion moved from "absent" to "present" rather than away.
+    expect(HE_ONLY_KEY in EN).toBe(true)
     const result = catalogueSchema.safeParse(EN)
     expect(rejectionPaths(result)).toEqual([])
     expect(result.success).toBe(true)
@@ -238,8 +247,8 @@ describe('3 · the schema rejects a mutated catalogue and names the path', () =>
 // ─── 4 · THE HEBREW-ONLY FALLBACK ────────────────────────────────────────────
 
 describe('4 · the Hebrew-only fallback (ledger D-18)', () => {
-  it('4a · the data premise: en.json has no heroBadges and every Hebrew alt is non-empty', () => {
-    expect(HE_ONLY_KEY in EN).toBe(false)
+  it('4a · the data premise: en.json has its OWN heroBadges and every Hebrew alt is non-empty', () => {
+    expect(HE_ONLY_KEY in EN).toBe(true)
     const badges = HE[HE_ONLY_KEY]
     if (!Array.isArray(badges)) throw new Error('fixture drift: he.heroBadges is not an array')
     expect(badges).toHaveLength(3)
@@ -250,19 +259,25 @@ describe('4 · the Hebrew-only fallback (ledger D-18)', () => {
     }
   })
 
-  itWhenLanded('4b · getMessages("en") returns the Hebrew alt, and it is NOT empty', () => {
+  itWhenLanded('4b · getMessages("en") returns ENGLISH badge alts, and none is empty', () => {
+    // W16-D: this used to assert the Hebrew alt was served to English readers,
+    // because no English existed. It does now — translated from the Hebrew, with
+    // the unit names the English catalogue ALREADY carried — so the assertion is
+    // the opposite one, and it is stronger: the alts must differ per locale and
+    // must still never be empty. The Hebrew literal that used to be pinned here
+    // is deliberately not replaced by an English literal: pinning the words is
+    // i18n/__tests__/booker-copy-and-memorial-guard.test.ts's job, once.
     const en = getMessages('en')
     const he = getMessages('he')
 
     expect(en.heroBadges).toHaveLength(3)
-    expect(en.heroBadges).toEqual(he.heroBadges)
+    expect(en.heroBadges).toHaveLength(he.heroBadges.length)
+    expect(en.heroBadges).not.toEqual(he.heroBadges)
 
-    const first = en.heroBadges[0]
-    expect(first).toBeDefined()
-    // The whole point of the rule: never an empty alt, never invented English.
-    expect(first?.alt).not.toBe('')
-    expect(first?.alt.trim().length).toBeGreaterThan(0)
-    expect(first?.alt).toBe('סמל חטיבה 188')
+    for (const badge of en.heroBadges) {
+      expect(badge.alt.trim().length).toBeGreaterThan(0)
+    }
+    expect(en.heroBadges.map((b) => b.alt)).not.toEqual(he.heroBadges.map((b) => b.alt))
   })
 
   itWhenLanded('4c · no OTHER key silently falls back — en keeps its own English', () => {

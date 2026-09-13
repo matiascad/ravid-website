@@ -194,6 +194,20 @@ const CLASSIFICATION: Readonly<Record<string, KeyClass>> = {
   formDirect: MARKETING,
   required: MARKETING,
 
+  // W16-A THE PRIVACY NOTICE. Classified MARKETING because this table has only
+  // three buckets and the notice is NOT a memorial fact — it says nothing about
+  // Tuval, carries no date, rank, unit or count, and nothing in it is copied from
+  // the family's own words. It is a statement about DATA HANDLING, derived from
+  // app/api/lead/route.ts and lib/leads/**, and MARKETING here means exactly one
+  // thing: not pinned by this guard. HONEST LIMIT 1 of this file applies with
+  // full force — if these sentences drift out of agreement with what the code
+  // does, nothing in this repository will notice. That check is a human one.
+  privacyTitle: MARKETING,
+  privacyData: MARKETING,
+  privacyPurpose: MARKETING,
+  privacyRetention: MARKETING,
+  privacyContact: MARKETING,
+
   footerMemorial: MEMORIAL,
   footerAge: MEMORIAL,
   footerFriends: MEMORIAL,
@@ -290,6 +304,11 @@ const PINNED_SHA256: Readonly<Record<Locale, Readonly<Record<string, string>>>> 
     footerFriends: 'bc21f59357a1e4c5453cd3d1f8a48de50e8d487e78b206b13bd989d925472a28',
     copyright: '0e31892027defb5148a71bc9a80390c7a392c593075147175b805ee079532ff4',
     copyrightLink: '47ccad55c912b7daeec42e936d198cee6dbe394ab811d4d3b3937b5fb3597f03',
+    // W16-D: en.json now supplies its own English for these two MEMORIAL keys
+    // (badge alts, photograph alts). Pinned here for the first time, because
+    // until W16-D en.json did not contain them at all.
+    heroBadges: '1e1ba4211a7d8ca3af752e527cfaef40f907f23184fd744ebe596e9fa80971b2',
+    imageAlts: 'e448b74b88061b3c134b355527692301886c9a1927461c7c1f8b75d01b7004c0',
   },
 };
 
@@ -429,11 +448,17 @@ describe('every memorial fact is byte-identical to its pinned value', () => {
 /* ── 3. Neither locale may be improved without the other ──────────────────── */
 
 describe('the two catalogues stay structurally identical', () => {
-  it('en.json is he.json minus exactly the source-only keys', () => {
-    const expected = Object.keys(CATALOGUE_FILES.he)
+  it('en.json is he.json, with every source-only key supplied rather than omitted', () => {
+    // W16-D: en.json now carries its own English for every SOURCE_ONLY key, so
+    // the key sets are equal. The floor below is what actually guards the
+    // structure — en may never drop BELOW he-minus-the-optional-keys — and the
+    // equality above it records the state W16-D landed.
+    const floor = Object.keys(CATALOGUE_FILES.he)
       .filter((key) => !SOURCE_ONLY_KEYS.some((sourceOnly) => sourceOnly === key))
       .sort();
-    expect(Object.keys(CATALOGUE_FILES.en).sort()).toEqual(expected);
+    const actual = Object.keys(CATALOGUE_FILES.en).sort();
+    for (const key of floor) expect(actual).toContain(key);
+    expect(actual).toEqual(Object.keys(CATALOGUE_FILES.he).sort());
   });
 });
 

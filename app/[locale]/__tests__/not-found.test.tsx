@@ -168,3 +168,223 @@ describe('W13-B self-scan · no Hebrew code point in this delegate source', () =
     expect(source.includes(forbidden)).toBe(false)
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// W16-FIX1 · THE PRERENDER TRIPWIRE.
+//
+// WHY THIS BLOCK EXISTS, and it is the only thing this delegate landed. MEASURED
+// on Next 15.5.25, in an isolated build rig, ONE variable changed (a `getLocale()`
+// call added to app/[locale]/not-found.tsx) against an otherwise identical tree:
+//
+//                              baseline        with the request read
+//   route table                ● /[locale]     ● /[locale]   <- UNCHANGED
+//   he.html / en.html on disk  PRESENT         ABSENT
+//   prerender-manifest routes  7 (incl /he,    4 (/he, /en and /_not-found
+//                              /en, /_not-found)   all gone)
+//   /_not-found in the table   ○               f
+//
+// READ THE FIRST ROW AGAIN. `next build` STILL PRINTED THE BULLET, still listed
+// /he and /en beneath it, and the two content pages were NOT prerendered. The
+// build output is not a detector for this defect; it is a witness that reports
+// the opposite of the truth. That is the same shape as this repo's `bg-gold`
+// lesson - a green name over an absent thing - and it is why the guard below is
+// a source scan and not a reading of the route table.
+//
+// WHAT IT ASSERTS: the two not-found boundary files import no locale reader and
+// no request API. It is a tripwire on the CAUSE, checked in a process that costs
+// no build. HONEST LIMIT: a scan of import statements is not a proof of absence
+// of a request read - an indirect read through a helper module, or a dynamic
+// import, passes this. It catches the way the defect has actually arrived twice,
+// not every way it could. The build-artefact half (assert he.html and en.html
+// exist after `next build`) is still owed and is not writable from here.
+// ─────────────────────────────────────────────────────────────────────────────
+describe('W16-FIX1 · no request-scoped read may enter a not-found boundary', () => {
+  /** The two files Next renders as a not-found boundary in this project. */
+  const BOUNDARY_FILES = [
+    'app/[locale]/not-found.tsx',
+    'app/not-found.tsx',
+  ] as const
+
+  /**
+   * Module specifiers no boundary file may import AT ALL. Each one exists only
+   * to tell a render who is asking, which is the read that empties the
+   * prerender. `@/i18n/routing` is deliberately NOT here: app/not-found.tsx
+   * imports LOCALE_DIRECTION from it, a module constant that reads nothing. The
+   * navigation primitive from that module is caught by name instead.
+   */
+  const BANNED_MODULES = [
+    'next/headers',
+    'next-intl/server',
+    'next/root-params',
+  ] as const
+
+  /**
+   * Named imports no boundary file may take, whatever module they come from.
+   * `Link` is on this list ONLY for `@/i18n/routing`: next-intl's server Link
+   * calls getLocale() unconditionally, before it reads its own `locale` prop, so
+   * passing the locale explicitly does not avoid the read.
+   */
+  const BANNED_NAMES = [
+    'useLocale',
+    'getLocale',
+    'setRequestLocale',
+    'getTranslations',
+    'headers',
+    'cookies',
+    'draftMode',
+    'connection',
+    'unstable_rootParams',
+  ] as const
+
+  function importStatementsIn(source: string): string[] {
+    return source.split('\n').filter((line) => line.trimStart().startsWith('import '))
+  }
+
+  for (const relative of BOUNDARY_FILES) {
+    const source = () => readFileSync(join(REPO_ROOT, relative), 'utf8')
+
+    it(`imports no request-scoped module: ${relative}`, () => {
+      const offenders = importStatementsIn(source()).filter((line) =>
+        BANNED_MODULES.some((mod) => line.includes(`'${mod}'`))
+      )
+      expect(offenders).toEqual([])
+    })
+
+    it(`imports no locale reader by name: ${relative}`, () => {
+      const offenders = importStatementsIn(source()).filter((line) =>
+        BANNED_NAMES.some((name) => new RegExp(`\\b${name}\\b`).test(line))
+      )
+      expect(offenders).toEqual([])
+    })
+
+    it(`takes no navigation primitive from the routing module: ${relative}`, () => {
+      const offenders = importStatementsIn(source()).filter(
+        (line) =>
+          line.includes("'@/i18n/routing'") &&
+          /\b(Link|redirect|usePathname|useRouter|getPathname)\b/.test(line)
+      )
+      expect(offenders).toEqual([])
+    })
+  }
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// W16-FIX4 · THE LANGUAGE OF THE PART, ASSERTED AS A COMPUTED RELATION.
+//
+// ⚠️ WHAT THIS DOES NOT DO, first, because the file's own header warns about it:
+// it does not assert that an attribute appears in the JSX. A string match on
+// `lang="he"` would pass over markup where the attribute sits on a sibling, or
+// on an element that contains none of the words. The measurement that matters —
+// and the one taken in a real browser for this fix — is: WALK UP FROM THE TEXT
+// NODE THAT ACTUALLY HOLDS THE HEBREW AND READ THE NEAREST `lang` ANCESTOR.
+// That is what these tests compute, over the real rendered DOM, in the same
+// direction assistive technology resolves it.
+//
+// THE THIRD TEST IS THE ONE THAT PROVES THE ARCHITECTURE. It mounts the 404
+// inside a HOSTILE shell that declares the OTHER locale — which is exactly the
+// served condition on /en/<missing>, measured in Chromium: the [locale] layout's
+// `<html lang="en" dir="ltr">` wins hydration while every rendered word is
+// Hebrew. If the annotation lived on the document element, that test could not
+// be written at all. It passes only because the declaration lives INSIDE the
+// subtree this component owns.
+// ─────────────────────────────────────────────────────────────────────────────
+describe('W16-FIX4 · every Hebrew text node declares its own language', () => {
+  /** The nearest ancestor `lang`/`dir`, walked up from a node, as a browser would. */
+  function nearestLanguageAnnotation(
+    node: Node
+  ): { lang: string | null; dir: string | null } {
+    let current: Node | null = node
+    while (current) {
+      if (current.nodeType === 1) {
+        const element = current as Element
+        if (element.hasAttribute('lang')) {
+          return {
+            lang: element.getAttribute('lang'),
+            dir: element.getAttribute('dir'),
+          }
+        }
+      }
+      current = current.parentNode
+    }
+    return { lang: null, dir: null }
+  }
+
+  /** Every text node in `root` that contains at least one Hebrew code point. */
+  function hebrewTextNodes(root: ParentNode & Node): Text[] {
+    const found: Text[] = []
+    const walk = (node: Node) => {
+      if (node.nodeType === 3) {
+        const text = node as Text
+        if (hebrewCodePointsIn(text.data).length > 0) found.push(text)
+        return
+      }
+      node.childNodes.forEach(walk)
+    }
+    walk(root)
+    return found
+  }
+
+  function parse(markup: string): HTMLElement {
+    const host = document.createElement('div')
+    host.innerHTML = markup
+    return host
+  }
+
+  const OTHER_LOCALE = LOCALES.find((locale) => locale !== NOT_FOUND_COPY_LOCALE)
+
+  it('finds Hebrew to annotate at all — the premise, not assumed', () => {
+    // If this goes red the catalogue changed and the two tests below would pass
+    // VACUOUSLY. DENOMINATOR BEFORE VERDICT: they are only meaningful while the
+    // rendered copy actually contains the script being annotated.
+    const nodes = hebrewTextNodes(parse(renderToStaticMarkup(<LocaleNotFound />)))
+    expect(nodes.length).toBeGreaterThan(0)
+  })
+
+  it('declares lang and dir on an ancestor of every Hebrew text node it renders', () => {
+    const nodes = hebrewTextNodes(parse(renderToStaticMarkup(<LocaleNotFound />)))
+    const annotations = nodes.map((node) => nearestLanguageAnnotation(node))
+    expect(annotations).toEqual(
+      nodes.map(() => ({
+        lang: NOT_FOUND_COPY_LOCALE,
+        dir: LOCALE_DIRECTION[NOT_FOUND_COPY_LOCALE],
+      }))
+    )
+  })
+
+  it('holds inside a shell that declares the OTHER locale — the /en/<missing> case', () => {
+    // The measured production condition, reconstructed: the surviving <html>
+    // says `en`/`ltr` and every word below it is Hebrew. The component must
+    // still resolve to its own language, or a screen reader reads Hebrew in an
+    // English voice. This is the assertion that fails if the annotation is
+    // moved back out to any document-level element.
+    expect(OTHER_LOCALE).toBeDefined()
+    const hostile = renderToStaticMarkup(
+      <div lang={OTHER_LOCALE} dir={LOCALE_DIRECTION[OTHER_LOCALE as Locale]}>
+        <LocaleNotFound />
+      </div>
+    )
+    const nodes = hebrewTextNodes(parse(hostile))
+    expect(nodes.length).toBeGreaterThan(0)
+    for (const node of nodes) {
+      expect(nearestLanguageAnnotation(node)).toEqual({
+        lang: NOT_FOUND_COPY_LOCALE,
+        dir: LOCALE_DIRECTION[NOT_FOUND_COPY_LOCALE],
+      })
+    }
+  })
+
+  it('does not restate the locale — lang, dir and the words are one expression', () => {
+    // ONE FACT ONE PLACE, checked as a property rather than by reading the file:
+    // the annotation tracks NOT_FOUND_COPY_LOCALE, which is itself DEFAULT_LOCALE,
+    // which is what supplies the words. A literal typed into the JSX would pass
+    // the tests above today and go silently wrong the day the constant moves;
+    // this one pins the three to each other.
+    expect(NOT_FOUND_COPY_LOCALE).toBe(DEFAULT_LOCALE)
+    const nodes = hebrewTextNodes(parse(renderToStaticMarkup(<LocaleNotFound />)))
+    const words = getMessages(DEFAULT_LOCALE).notFound
+    expect(nodes.map((node) => node.data).join(' ')).toContain(words.description)
+    expect(nodes.map((node) => nearestLanguageAnnotation(node).lang)).toEqual(
+      nodes.map(() => DEFAULT_LOCALE)
+    )
+  })
+})

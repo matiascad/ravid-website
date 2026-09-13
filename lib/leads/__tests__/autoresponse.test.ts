@@ -20,7 +20,9 @@
 //     Hebrew codepoints, and must contain NONE of the English literals.
 //
 // The regex over the Hebrew block is built with `new RegExp` from ESCAPES, for
-// the reason `seo.test.ts:336` gives: writing the range literally would put two
+// the reason `seo.test.ts` gives where it calls its Hebrew block "built from
+// ESCAPES rather than from literal characters": writing the range literally
+// would put two
 // Hebrew codepoints into the very file that forbids them.
 // ─────────────────────────────────────────────────────────────────────────────
 
