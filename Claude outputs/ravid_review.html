@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>RAVID SITE — UNDERSTOOD</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#FFFFFF;color:#111111;font-family:"Segoe UI",Arial,Helvetica,sans-serif;font-size:23px}
+  .w{width:900px;margin:0 auto;padding:16px}
+  .ban{padding:18px 20px;text-align:center;color:#FFFFFF;margin-bottom:18px;border-radius:6px}
+  .ban .a{font-size:30px;font-weight:800}.ban .b{font-size:19px;margin-top:6px}
+  .blu{background:#1565C0}.grn{background:#1B7F3F}.red{background:#B3261E}
+  .hd{color:#FFFFFF;padding:12px 18px;font-size:24px;font-weight:800;border-radius:6px 6px 0 0;background:#22364B}
+  .hgrn{background:#1B7F3F}.hred{background:#B3261E}.hblu{background:#1565C0}
+  table{width:100%;border-collapse:collapse;margin-bottom:18px}
+  td{padding:10px 16px;border-bottom:2px solid #E2E8ED;vertical-align:middle}
+  tr:nth-child(even) td{background:#F2F5F8}
+  td.k{font-family:Consolas,monospace;font-weight:900;width:265px;font-size:21px;color:#111111}
+  td.v{text-align:right;font-weight:800;font-family:Consolas,monospace;white-space:nowrap;width:140px;font-size:21px}
+  .g{color:#1B7F3F}.o{color:#E08A0B}.r{color:#B3261E}.m{color:#7A8A99}
+  tr.ok td{background:#EAF5EE}
+  tr.warn td{background:#FFF3D0}
+  tr.bad td{background:#FBE9E7}
+  tr.gate td{background:#22364B;color:#FFFFFF;font-weight:800;text-align:center;font-size:21px}
+  .bar{display:inline-block;height:16px;background:#1B7F3F;border-radius:3px;vertical-align:middle}
+  .bar.o{background:#E08A0B}.bar.r{background:#B3261E}
+  .big{font-size:46px;font-weight:800;text-align:center;padding:10px 0}
+</style>
+</head>
+<body>
+<div class="w">
+
+  <div class="ban grn">
+    <div class="a">🧭 PROJECT UNDERSTOOD — ravid_website</div>
+    <div class="b">Memorial + lecture-booking site for Tuval ז"ל · speaker: Ravid · LIVE on Vercel</div>
+  </div>
+
+  <div class="hd hblu">🏗️ ARCHITECTURE — Next.js 14 App Router · TS · Tailwind</div>
+  <table>
+    <tr class="ok"><td class="k">app/layout.tsx</td><td>html lang=he dir=rtl + Hebrew SEO metadata</td><td class="v g">43 L ✅</td></tr>
+    <tr class="ok"><td class="k">app/page.tsx</td><td>'use client' → renders 1 component</td><td class="v g">6 L ✅</td></tr>
+    <tr class="ok"><td class="k">app/globals.css</td><td>tailwind + animation-delay-100…800</td><td class="v g">33 L ✅</td></tr>
+    <tr class="warn"><td class="k">TuvalMemorialLanding.tsx</td><td>THE whole site — 8 sections, 3 useState, 1 useEffect</td><td class="v o">594 L ⚠️</td></tr>
+    <tr class="ok"><td class="k">public/images/</td><td>4 × tuval_0X + 3 × ravid-lecture — all wired via next/Image fill</td><td class="v g">7 ✅</td></tr>
+    <tr class="bad"><td class="k">components/Analytics.tsx</td><td>GA4 + Meta Pixel — never imported, IDs empty</td><td class="v r">DEAD 🔴</td></tr>
+    <tr class="gate"><td colspan="3">🚦 monolith by design · zero duplication · 1 route · docs/ = 12 status files · 13 commits → github.com/matiascad/ravid-website</td></tr>
+  </table>
+
+  <div class="hd hgrn">✅ 8 SECTIONS — all built, Hebrew, RTL, animated</div>
+  <table>
+    <tr class="ok"><td class="k">1 Hero</td><td>"בסוף הכל יהיה בסדר" · dates · גדוד 53 / עוצבת ברק</td><td class="v o">no photo ⚠️</td></tr>
+    <tr class="ok"><td class="k">2 על תובל</td><td>story + 2×2 photo grid + military + last battle</td><td class="v g">✅</td></tr>
+    <tr class="ok"><td class="k">3 מההרצאות</td><td>3 lecture photos of Ravid</td><td class="v g">✅</td></tr>
+    <tr class="ok"><td class="k">4 מספרים</td><td>300+ soldiers · 15+ lectures · 100% · ∞</td><td class="v g">✅</td></tr>
+    <tr class="ok"><td class="k">5–7 תוכן·המלצות·CTA</td><td>what you get, audiences, agenda, testimonials</td><td class="v g">✅</td></tr>
+    <tr class="bad"><td class="k">8 הזמן הרצאה (form)</td><td>5 fields → handleSubmit = alert() only. NOTHING IS SENT</td><td class="v r">LEAK 🔴</td></tr>
+  </table>
+
+  <div class="hd hred">🔴 GAPS — ranked, with the fix</div>
+  <table>
+    <tr class="bad"><td class="k">P1 form</td><td>add EmailJS/Resend or /api route → else swap to WhatsApp-only button</td><td class="v r">10/10</td></tr>
+    <tr class="bad"><td class="k">P2 next.config.js</td><td>i18n{} block is unsupported in App Router → remove it</td><td class="v r">9/10</td></tr>
+    <tr class="warn"><td class="k">P3 analytics</td><td>import &lt;Analytics/&gt; in layout + paste GA4 ID → know if leads arrive</td><td class="v o">7/10</td></tr>
+    <tr class="warn"><td class="k">P4 hero photo</td><td>Shield icon placeholder where Tuval's face belongs</td><td class="v o">7/10</td></tr>
+    <tr class="warn"><td class="k">P5 SEO</td><td>no metadataBase · no OG image · no sitemap/robots</td><td class="v o">6/10</td></tr>
+    <tr class="ok"><td class="k">P6 docs drift</td><td>docs claim 97/100 "production ready" — form still dead</td><td class="v g">3/10</td></tr>
+  </table>
+
+  <div class="hd">📊 SCORE</div>
+  <table>
+    <tr class="ok"><td class="k">Architecture</td><td><span class="bar" style="width:270px"></span></td><td class="v g">9/10</td></tr>
+    <tr class="ok"><td class="k">Content · Hebrew</td><td><span class="bar" style="width:300px"></span></td><td class="v g">10/10</td></tr>
+    <tr class="ok"><td class="k">Design · RTL · photos</td><td><span class="bar" style="width:255px"></span></td><td class="v g">8.5/10</td></tr>
+    <tr class="bad"><td class="k">Functional (leads)</td><td><span class="bar r" style="width:90px"></span></td><td class="v r">3/10</td></tr>
+    <tr class="warn"><td class="k">SEO · analytics</td><td><span class="bar o" style="width:150px"></span></td><td class="v o">5/10</td></tr>
+    <tr class="ok"><td class="k">Deploy · git</td><td><span class="bar" style="width:270px"></span></td><td class="v g">9/10</td></tr>
+    <tr class="gate"><td colspan="3">OVERALL 74 / 100 · 74% — beautiful site, broken funnel 🟡</td></tr>
+  </table>
+
+  <div class="ban blu"><div class="a">▶️ NEXT — say which: P1 form · P2 config · P3 analytics</div><div class="b">I answer with a PLAN (Goal / Files / Edits / Lines± / Risk / Test) and wait for "Y." · no git — you commit</div></div>
+
+</div>
+</body>
+</html>

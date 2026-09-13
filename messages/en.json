@@ -1,0 +1,190 @@
+{
+  "dir": "ltr",
+  "heroTitle": "\"In the end, everything will be okay\"",
+  "heroSubtitle": "Inspiring lectures in memory of Staff Sgt. Tuval Yaakov Tzanani z\"l –",
+  "heroSubtitle2": "A story of heroism, brotherhood, and hope",
+  "heroCta": "✅ Book a Lecture Now",
+  "heroStory": "📖 Read the Story",
+  "heroDates": "20.11.2003 – 04.12.2023",
+  "heroRole": "Armored Corps Fighter",
+  "heroBrigade": "Barak Brigade (188)",
+  "heroBattalion": "Battalion 53",
+  "storyTitle": "Tuval's Story – A Hero Never Forgotten",
+  "storyH3": "The boy who became a warrior",
+  "storyP1": "Tuval Yaakov Tzanani was born in Kiryat Gat on November 20, 2003. From a young age, he stood out with his special personality – a boy with an infectious smile, a big heart, and a constant willingness to help others.",
+  "storyP2": "In school, Tuval was beloved by his friends and teachers. He believed that \"in the end, everything will be okay\" – a phrase that became his life motto and accompanied him every step of the way.",
+  "storyP3": "When it came time to enlist, Tuval had no doubt – he wanted to be a fighter, to protect the country and the people he loved. He chose the Armored Corps, where he became an outstanding gunner in a Merkava tank.",
+  "storyQuote": "\"Tuval taught us that true heroism is not only on the battlefield, but in the ability to live even in the hardest moments and believe that in the end, everything will be okay\"",
+  "militaryTitle": "Military Service – Pride and Dedication",
+  "militaryCards": [
+    {
+      "title": "Barak Brigade (188)",
+      "desc": "One of the leading brigades of the Armored Corps, with a glorious combat heritage"
+    },
+    {
+      "title": "Battalion 53",
+      "desc": "The tank battalion where Tuval served as an outstanding gunner and dedicated fighter"
+    },
+    {
+      "title": "Staff Sgt. (posthumous)",
+      "desc": "Promoted in rank in recognition of his bravery and dedication in battle"
+    }
+  ],
+  "battleTitle": "The Last Battle – Heroism in Swords of Iron",
+  "battleP1": "On December 4, 2023, during the Swords of Iron war, Tuval went out with his tank crew on a combat mission in the Gaza Strip. They knew the mission was dangerous, but they were determined to defend the State of Israel.",
+  "battleP2": "In the fierce battle, Tuval's tank was hit. Along with him fell his two close friends – Eitan Fish and Yakir Yedidia Shinkolvsky z\"l. Three young men full of life, dreams, and hopes, who gave their lives for their homeland.",
+  "battleP3": "Tuval was 20 years old when he fell. A young man who lived life full of love, joy, and meaning, leaving behind a legacy of heroism and hope that will live forever.",
+  "lecturesTitle": "From My Lectures – Moments of Inspiration",
+  "lectureItems": [
+    "Lectures to thousands of soldiers",
+    "Over 1,400 blood donations in Tuval's memory that saved the lives of thousands of soldiers",
+    "Lectures to public officials and media",
+    ""
+  ],
+  "lecturesFooter": "In every lecture, I bring Tuval's story, the messages he left behind, and the strength to move forward with the belief that in the end, everything will be okay",
+  "statsTitle": "My Impact in Numbers",
+  "stats": [
+    {
+      "num": "+1000",
+      "label": "Soldiers participated",
+      "desc": ""
+    },
+    {
+      "num": "+57",
+      "label": "Lectures delivered",
+      "desc": "Across the country"
+    },
+    {
+      "num": "100%",
+      "label": "Warm recommendations",
+      "desc": ""
+    },
+    {
+      "num": "∞",
+      "label": "Memory",
+      "desc": ""
+    }
+  ],
+  "whatTitle": "My Lectures – What Will You Get?",
+  "whatContentTitle": "Lecture Content",
+  "whatContent": [
+    {
+      "icon": "🔥",
+      "title": "A touching personal story",
+      "desc": "I tell about Tuval, about our childhood together, his dreams and the path he chose. A story that connects listeners to a real figure and evokes deep identification."
+    },
+    {
+      "icon": "✨",
+      "title": "Values and life messages",
+      "desc": "From the story emerge values of brotherhood, dedication, love of homeland, and most importantly – the ability to see the good even in the hardest moments."
+    },
+    {
+      "icon": "🤍",
+      "title": "Coping tools",
+      "desc": "I share how our family deals with the loss, how to turn pain into a smile and move forward with memory and hope."
+    }
+  ],
+  "whatAudienceTitle": "Tailored for every audience",
+  "whatAudience": [
+    {
+      "title": "For soldiers and pre-military",
+      "desc": "Strengthening before service, understanding what it means to be a fighter, and the power of military brotherhood"
+    },
+    {
+      "title": "For students and youth",
+      "desc": "Life inspiration, the importance of values, and how everyone can make an impact and contribute to the country"
+    },
+    {
+      "title": "For tech workers and companies",
+      "desc": "Perspective on life, importance of family and community, and how to live with meaning"
+    },
+    {
+      "title": "For leaders and decision makers",
+      "desc": "Understanding the human cost, importance of supporting bereaved families, and leadership in times of crisis"
+    }
+  ],
+  "howTitle": "What Does a Lecture Look Like?",
+  "howFormats": [
+    {
+      "icon": "🕐",
+      "title": "45–60 minutes",
+      "desc": "Lecture duration is tailored to your audience and needs"
+    },
+    {
+      "icon": "👥",
+      "title": "Interactive",
+      "desc": "Open dialogue, Q&A, and sharing experiences"
+    },
+    {
+      "icon": "🎯",
+      "title": "Personally tailored",
+      "desc": "Each lecture is customized for the target audience and your goals"
+    }
+  ],
+  "testimonialsTitle": "What People Say About the Lectures",
+  "testimonials": [
+    {
+      "text": "Highly recommended, a fascinating lecture that gives strength and values every time. Ravid manages to convey his brother's story in a way that touches every soldier. The lecture leaves them with motivation and strength to continue their important mission.",
+      "icon": "👥",
+      "name": "Barak Family, Battalion 53, Golan Company",
+      "sub": ""
+    },
+    {
+      "text": "A warm recommendation – an inspiring lecture that touches the heart and leaves a deep impression. Ravid brings his personal story honestly and openly, making everyone think about their life, what truly matters, and the power each of us has to make a difference.",
+      "icon": "🏅",
+      "name": "Heroism Forum",
+      "sub": "Bereaved Families Forum"
+    },
+    {
+      "text": "A powerful lecture that brings the heroism story of the armored fighters in a real and moving way. Ravid manages to connect everyone to values of brotherhood, dedication, and love of the land. A must for every soldier and every Israeli.",
+      "icon": "🛡️",
+      "name": "Israeli Armored Corps",
+      "sub": "Authentic recommendation"
+    }
+  ],
+  "whyTitle": "Why Book This Lecture?",
+  "whyReasons": [
+    "Because in a world that rushes forward, sometimes you need to stop and remember what truly matters.",
+    "Because Tuval's story is the story of all of us – about love, courage, and the ability to believe.",
+    "Because each of us needs to hear that even in the hardest moments, in the end, everything will be okay."
+  ],
+  "whyCta": "💬 Book a Lecture Now",
+  "wineTitle": "In Memory of Tuval",
+  "wineSubtitle": "Special wine in Tuval's memory – every purchase is part of the commemoration",
+  "wineCta": "🍷 Purchase Wine",
+  "formTitle": "Book a Lecture",
+  "formSubtitle": "Fill in your details and we'll get back to you as soon as possible",
+  "formName": "Full Name",
+  "formPhone": "Phone",
+  "formEmail": "Email",
+  "formOrg": "Organization Name",
+  "formMessage": "Message",
+  "formNamePh": "Your name",
+  "formPhonePh": "050-000-0000",
+  "formEmailPh": "name@email.com",
+  "formOrgPh": "Organization name",
+  "formMsgPh": "Tell us about your event...",
+  "formSubmit": "Submit Lecture Request",
+  "formSuccess": "Request sent successfully!",
+  "formSuccessDesc": "We'll get back to you as soon as possible",
+  "formDirect": "Contact us directly:",
+  "required": "*",
+  "footerMemorial": "In memory of Staff Sgt. Tuval Yaakov Tzanani z\"l",
+  "footerAge": "Aged 20 at his fall • 21 Kislev 5784",
+  "footerFriends": "And in memory of his friends Eitan Fish and Yakir Yedidia Shinkolvsky z\"l",
+  "footerContact": "Contact:",
+  "copyright": "© All rights reserved to Ravid Tzanani. Content may not be copied, reproduced, or distributed without written permission.",
+  "copyrightLink": "Copyright",
+  "wine": [
+    "Red Wine",
+    "Rosé",
+    "White Wine",
+    "Trio Package"
+  ]
+,
+  "notFound": {
+    "title": "404",
+    "description": "Oops! Page not found",
+    "backHome": "Return to Home"
+  }
+}

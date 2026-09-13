@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ravid_website rebuild — STATUS DASHBOARD (after W7)</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#FFFFFF;color:#14202B;font-family:"Segoe UI",Arial,Helvetica,sans-serif;font-size:15px}
+  .w{max-width:1240px;width:100%;margin:0 auto;padding:22px}
+  h1{font-size:31px;margin:0 0 6px 0;color:#1B4F82;font-weight:800}
+  .src{font-size:13px;color:#5B6B7B;margin-bottom:18px}
+  .ovr{border:2px solid #1B4F82;border-radius:10px;padding:16px 18px;display:flex;align-items:center;gap:18px;margin-bottom:20px}
+  .ovr .pct{font-size:44px;font-weight:800;color:#1B4F82;min-width:120px;text-align:center}
+  .ovr .mid{flex:1}
+  .ovr .t{font-weight:800;font-size:17px;text-align:center;margin-bottom:8px}
+  .track{height:16px;background:#E7ECF1;border-radius:8px;overflow:hidden}
+  .fill{height:100%;background:#1B7F3F}
+  .chips{margin-top:9px;font-size:13px;color:#33475B;text-align:center}
+  .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px}
+  .card{border:2px solid #D7DEE5;border-radius:10px;padding:14px 15px;position:relative}
+  .card.done{border-color:#1B7F3F}
+  .card.now{border-color:#C9781A}
+  .card.plan{border-color:#7A8A99;background:#FAFBFC}
+  .badge{position:absolute;top:-11px;left:14px;font-size:12px;font-weight:800;color:#FFF;padding:3px 9px;border-radius:10px}
+  .b-done{background:#1B7F3F}.b-now{background:#C9781A}.b-plan{background:#5B6B7B}.b-red{background:#B3261E}
+  .ct{font-weight:800;font-size:18px;margin:2px 0 3px 0}
+  .cm{font-size:12.5px;color:#5B6B7B;margin-bottom:9px}
+  .row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+  .score{font-size:31px;font-weight:800;color:#14202B}
+  .score span{font-size:15px;color:#5B6B7B}
+  .sm{font-size:12.5px;color:#33475B}
+  ul{margin:8px 0 0 0;padding-inline-start:18px}
+  li{font-size:12.8px;margin-bottom:5px;line-height:1.45}
+  .mdl{display:inline-block;font-family:Consolas,monospace;font-size:11.5px;font-weight:800;padding:2px 7px;border-radius:4px;background:#E8F0F8;color:#1B4F82;margin-inline-end:4px}
+  .mdl.s{background:#EAF5EE;color:#1B7F3F}
+  .mdl.r{background:#FBE9E7;color:#B3261E}
+  .two{display:grid;grid-template-columns:1.15fr 1fr;gap:16px;margin-bottom:20px}
+  .half{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+  .panel{border:2px solid #D7DEE5;border-radius:10px;padding:14px 15px;margin-bottom:20px}
+  .panel.g{border-color:#1B7F3F}
+  .panel.r{border-color:#B3261E}
+  .panel.n{border-color:#7A8A99;background:#FAFBFC}
+  .pt{font-weight:800;font-size:18px;margin-bottom:10px;color:#1B4F82}
+  .pt.g{color:#1B7F3F}.pt.r{color:#B3261E}.pt.n{color:#5B6B7B}
+  table{width:100%;border-collapse:collapse}
+  th{background:#1B3B5C;color:#FFF;font-size:12.5px;padding:8px 10px;text-align:left}
+  td{font-size:12.6px;padding:7px 10px;border-bottom:1px solid #E7ECF1;vertical-align:top}
+  tr:nth-child(even) td{background:#F7F9FB}
+  .g{color:#1B7F3F;font-weight:800}.o{color:#C9781A;font-weight:800}.r{color:#B3261E;font-weight:800}
+  code,.mono{font-family:Consolas,"Courier New",monospace;font-size:12px}
+  /* three states — must stay distinguishable, including in greyscale */
+  .st{display:inline-block;font-family:Consolas,monospace;font-size:11px;font-weight:800;padding:1px 6px;border-radius:4px;border:1.5px solid;white-space:nowrap}
+  .st-p{background:#EAF5EE;color:#1B7F3F;border-color:#1B7F3F}
+  .st-a{background:#FBE9E7;color:#B3261E;border-color:#B3261E}
+  .st-n{background:#FFFFFF;color:#5B6B7B;border-color:#5B6B7B;border-style:dashed}
+  .st-c{background:#FDF3E6;color:#C9781A;border-color:#C9781A;border-style:dotted}
+  .cite{font-family:Consolas,monospace;font-size:10.5px;color:#7A8A99;font-weight:400;white-space:nowrap}
+  .he{direction:rtl;unicode-bidi:isolate;font-weight:700}
+  .ask{border:3px solid #B3261E;border-radius:10px;padding:16px 18px;margin-bottom:20px;background:#FFFBFA}
+  .ask .hd{font-size:21px;font-weight:800;color:#B3261E;margin-bottom:8px}
+  .ask .q{border-inline-start:4px solid #B3261E;padding:6px 0 6px 12px;padding-inline-start:12px;margin-bottom:9px;font-size:14px;line-height:1.55}
+  .ask .warn{background:#FDF3E6;border:1.5px solid #C9781A;border-radius:7px;padding:10px 12px;font-size:13px;line-height:1.55;margin-top:10px}
+  .ask .tail{font-size:12.8px;color:#33475B;margin-top:10px;line-height:1.55}
+  .lede{font-size:13.2px;line-height:1.55;margin-bottom:10px}
+  .big{font-size:26px;font-weight:800;color:#14202B;line-height:1.15}
+  .big.gg{color:#1B7F3F}.big.rr{color:#B3261E}
+  .foot{font-size:12px;color:#5B6B7B;border-top:1px solid #E7ECF1;padding-top:12px;line-height:1.6}
+  .legend{font-size:12.2px;color:#33475B;margin-bottom:12px;line-height:2}
+</style>
+</head>
+<body>
+<div class="w">
+
+  <h1>🛡️ ravid_website rebuild v1.01 — STATUS · 12.9.2026 · after W7</h1>
+  <div class="src">SOURCE — <b>every count on this page is READ from <code>REBUILD_STATUS_v1_00.md</code> (the ledger), cited inline against its section.</b> No number on this dashboard is retyped from a brief or from memory; where the ledger holds no number, this page says <span class="st st-n">NOT-MEASURED</span> rather than showing one. The ledger is the single home of every figure — if this page and the ledger ever disagree, <b>the ledger is right and this page is stale.</b> Companion to <code>PLAN_DASHBOARD_v1_00.html</code> (the "before"). Renders offline: no external CSS, font, script or image.</div>
+
+  <!-- ======================= THE ONE THING OWED TO MATI ======================= -->
+  <div class="ask">
+    <div class="hd">▶ FIRST ACTION OWED TO MATI — ask the family three questions</div>
+    <div class="lede"><b>They are the only places this site still says something it cannot fully stand behind.</b> <span class="cite">ledger §FIRST ACTION</span></div>
+
+    <div class="q"><b>§OPEN 7 — the three hero unit badges.</b> <span class="he">סמל חטיבה 188</span>, <span class="he">פלוגת גולן</span>, <span class="he">סמל סופה</span> exist <b>only in Hebrew</b>; the English page shows Hebrew. They are unit designations — proper nouns — and exist nowhere in the customer's <code>translations.ts</code>. <span class="cite">§OPEN 7 · D-18</span></div>
+
+    <div class="q"><b>§OPEN 9 — the Hebrew 404 copy.</b> There is <b>no Hebrew 404 copy anywhere in the customer's material</b>, so both catalogues currently hold their English. <span class="cite">§OPEN 9</span></div>
+
+    <div class="q"><b>The <code>imageAlts</code> English question.</b> <b>6 images serve Hebrew <code>alt</code> text on the English page.</b> <span class="cite">§FIRST ACTION · D-35</span></div>
+
+    <div class="lede">In all three cases an agent could have invented English and <b>deliberately did not</b>: inventing a fallen soldier's unit name, or words for his memorial, is the one thing no delegate was ever permitted to do. <span class="cite">§FIRST ACTION</span></div>
+
+    <div class="warn">⚠️ <b>Do §OPEN 9 knowingly: writing the Hebrew 404 copy also <i>reveals</i> a latent regression.</b> Today <code>/en/*</code> 404s look correct only because both catalogues hold identical English. <b>The moment Hebrew exists, English visitors will see it.</b> That trade bought static prerendering for every visitor (the ledger cites <b>D-40/D-41</b> here) and is <b>documented, not accidental</b>. <span class="cite">§FIRST ACTION, verbatim substance</span></div>
+
+    <div class="tail">Everything else is closed and independently verified. The ledger records <b>8 one-edit items</b> in §OPEN, each seeded from the customer's own newest build (<code>ravid_website1</code>) and wired to <b>one typed constant at a named <code>file:line</code></b> — so each answer costs exactly one edit. <b>Nothing is blocked; nothing was invented.</b> <span class="cite">§FIRST ACTION</span> &nbsp;·&nbsp; <b>The loudest is the Instagram handle:</b> our repo says <code>ravid._.t</code> (7 places), the customer's newest build says <code>ravid_.t</code> (2 places). One character apart, and <b>both are Mati's own sources</b> — W1 could not settle it, and no delegate was willing to guess. Seeded from the customer's build at <code>config/site.ts:78</code>. <span class="cite">§FIRST ACTION · §OPEN 1</span><br>
+    ⚠️ <b>§OPEN's own caveat, carried here rather than dropped:</b> its line numbers were <b>MEASURED at the end of W5, not computed</b>, and <code>config/site.ts</code> shifted twice tonight. If anything edits that file again, <b>re-measure rather than trusting them</b> — <code>grep -n 'export const' config/site.ts</code> settles it in one command. The constant NAMES are given beside every line number precisely so a stale number is recoverable. <span class="cite">§OPEN preamble</span></div>
+  </div>
+
+  <!-- ======================= VERDICT BAR ======================= -->
+  <div class="ovr">
+    <div class="mid">
+      <div class="t">SEVEN WAVES CLOSED · EVERY GATE PASS · W8 HANDOFF IN FLIGHT <span class="cite">§WAVES</span></div>
+      <div class="track"><div class="fill" style="width:87.5%"></div></div>
+      <div class="chips">W1 ✅ · W2 ✅ · W3 ✅ · W4 ✅ · W5 ✅ · W6 ✅ · W7 ✅ &nbsp;·&nbsp; W8 ▶ in flight &nbsp;·&nbsp; <b>7 of 7 closed waves verdict PASS</b> &nbsp;·&nbsp; <b>53</b> numbered decisions, <b>53/53</b> carrying a priced cost to reverse &nbsp;·&nbsp; <b>13</b> items in §OPEN · <b>6</b> in §DEFERRED · <b>8</b> in the §NOT-MEASURED register</div>
+    </div>
+    <div class="pct">7<span style="font-size:22px;color:#5B6B7B">/8</span></div>
+  </div>
+
+  <!-- ======================= RESULT AND NEAR-MISS, SIDE BY SIDE ======================= -->
+  <div class="half">
+
+    <div class="panel g" style="margin-bottom:0">
+      <div class="pt g">✅ THE HEADLINE RESULT — the defect this rebuild exists to remove</div>
+      <div class="lede"><b>A memorial site told a bereaved family's customer their enquiry was sent when it was not.</b> That is what the rebuild was for.</div>
+      <div class="big gg">CLOSED AT BOTH LAYERS</div>
+      <div class="sm" style="margin:8px 0 10px 0"><b>Proved twice over — by attack, and by reading both code paths.</b></div>
+      <ul>
+        <li><b>W7-C, adversarial · Attack 7:</b> <b>Server</b> — one 2xx producer, reachable <b>only</b> after <code>send()</code> resolves, and <code>send</code> itself throws on <code>response.ok !== true</code>; the unconfigured branch is <b>unrepresentable</b>, because <code>MailerResolution</code>'s <code>configured:false</code> arm has no <code>mailer</code> field. <b>Client</b> — <code>'sent'</code> assigned at exactly one site, inside <code>if (response.ok === true)</code>. <b>30+ POSTs, not one 200.</b> <span class="cite">§W7 · W7-C</span></li>
+        <li><b>W7-B, in a real browser, on the 503:</b> success panel <span class="st st-a">ABSENT</span> · WhatsApp fallback <span class="st st-p">PRESENT</span> with a 148-char prefilled href. <b>"The defect both predecessor sites shipped does not reproduce."</b> <span class="cite">§W7 · W7-B</span></li>
+        <li><b>W5-A's status table, closed at the server:</b> invalid → <b>422</b>, mailer called 0 · provider unconfigured → <b>503</b> · provider rejects/unreachable → <b>502</b>, mailer called 1 · body &gt; 16 KiB → <b>413 before <code>JSON.parse</code></b> · CR/LF in <code>name</code>/<code>email</code> → <b>422</b> · non-POST → <b>405</b>. <span class="cite">§W5</span></li>
+        <li><b>Hostile surface 34/34</b> — mail-header CR/LF rejected in every header-bound field, <code>__proto__</code> stripped, 413 on oversize, 405 + <code>Allow</code> on wrong verbs, <b>zero 200s, zero 500s</b>. <span class="cite">§W7 · W7-C</span></li>
+        <li>Why it was ever possible: the customer's <code>catch</code>-only fallback meant <code>fetch</code> rejected only on network failure, so a 4xx/5xx <b>resolved</b> and the user was shown success for an undelivered lead. Ours checks <code>res.ok</code>. <span class="cite">D-4</span></li>
+      </ul>
+    </div>
+
+    <div class="panel r" style="margin-bottom:0">
+      <div class="pt r">🔴 THE HEADLINE NEAR-MISS — and it is not a footnote</div>
+      <div class="lede"><b>Every automated gate was green while the booking button was invisible.</b></div>
+      <div class="big rr">5 GREEN GATES · 261 PASSING TESTS · 40+ DELEGATES · 6 WAVES</div>
+      <div class="sm" style="margin:8px 0 10px 0"><b>None of them could see it. A browser could.</b> <span class="cite">§W7 · "THE DEFECT OF THE NIGHT"</span></div>
+      <ul>
+        <li><code>components/sections/LeadForm.tsx:541</code> used <b><code>bg-gold</code></b>. Measured computed style in Chromium: <code>background-color: rgba(0,0,0,0)</code>, <code>color: rgb(0,0,0)</code>. <b>The <code>bg-gold</code> utility does not exist</b> — <b>Tailwind silently emits nothing for an undefined colour.</b> <span class="cite">§W7</span></li>
+        <li><b><code>border-gold</code> is equally non-existent</b>, at <code>:236</code> and <code>:402</code> — <b>the WhatsApp fallback link</b>, the one control a visitor is offered after a failed send. <span class="cite">§W7</span></li>
+        <li><b>Why nothing caught it:</b> unit tests assert classnames, and <b>a classname cannot tell you the class is undefined</b>. <b>This is the single strongest argument in the whole run for the browser pass existing at all.</b> <span class="cite">§W7</span></li>
+        <li><b>The brief was wrong about its own size:</b> the seat said <code>gold</code> was used in 3 places; the sweep found <b>12</b> (<code>text-gold</code> ×9, <code>border-gold</code> ×2, <code>bg-gold</code> ×1) — <b>which strengthens the decision rather than weakening it</b>. <span class="cite">D-46</span></li>
+        <li><b>And it surfaced a third dead control nobody had named:</b> <code>focus:border-gold</code> at <code>LeadForm.tsx:236</code> emitted nothing, so <b>every form field's focus ring was dead</b> and keyboard users had no focus feedback at all. <span class="cite">D-46</span></li>
+        <li><b>Closed, one executable line:</b> <code>gold</code> defined ONCE in <code>tailwind.config.ts</code>; the 12 instances were <b>not</b> patched. After: <b><code>rgb(209,163,71)</code> on <code>rgb(0,0,0)</code> = 9.04:1</b>; the stylesheet now emits <b>5</b> real <code>*-gold</code> rules where it emitted <b>zero</b>. <span class="cite">D-46 · §W7 final gate</span></li>
+        <li>⚠️ <b>The class is not fully shut:</b> <code>hsl(var(--accent))</code> carries no <code>&lt;alpha-value&gt;</code>, so <code>bg-gold/50</code> will silently fail exactly as <code>bg-gold</code> just did — <b>and this is true of all 14 colours in the config, not just gold</b>. <span class="st st-c">DEFERRED</span> <span class="cite">D-47(c)</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ======================= THE SEVEN-WAVE BOARD ======================= -->
+  <div class="panel">
+    <div class="pt">🌊 THE SEVEN-WAVE BOARD — read straight from §WAVES</div>
+    <table>
+      <tr><th style="width:15%">WAVE</th><th style="width:19%">DELEGATES</th><th style="width:9%">STATUS</th><th>GATE</th><th style="width:9%">VERDICT</th></tr>
+      <tr><td><b>W1 RECON</b></td><td>3 (2 opus, 1 sonnet)</td><td><b>CLOSED</b></td><td><code>REPORT_W1.md</code> exists, premises verified</td><td class="g">PASS</td></tr>
+      <tr><td><b>W2 SCAFFOLD</b></td><td>4 + 5 fixes + 3 gate passes</td><td><b>CLOSED</b></td><td>build ✔ tsc ✔ lint ✔ vitest ✔ · 0 deleted ✔</td><td class="g">PASS</td></tr>
+      <tr><td><b>W3 i18n CORE</b></td><td>12 (A–L) + 2 gate passes</td><td><b>CLOSED</b></td><td><code>/he</code>+<code>/en</code> 200 ✔ · dir flips ✔ · key parity ✔</td><td class="g">PASS</td></tr>
+      <tr><td><b>W4 SECTIONS</b></td><td>13 + ALT + 3 fixes + compose</td><td><b>CLOSED</b></td><td>13/13 both locales ✔ · 0 Hebrew in sections ✔</td><td class="g">PASS</td></tr>
+      <tr><td><b>W5 PLATFORM</b></td><td>3 + 5 fixes + 2 gate passes</td><td><b>CLOSED</b></td><td>lead 422/503/405 ✔ · OG 200 PNG 1200×630 ✔ · 0 ⚠ ✔</td><td class="g">PASS</td></tr>
+      <tr><td><b>W6 ASSETS</b></td><td>1 + 1 fix</td><td><b>CLOSED</b></td><td>manifest 25/25 ✔ · 25/25 resolve 200 ✔ · <b>first-paint 0.218 MB ✔</b></td><td class="g">PASS</td></tr>
+      <tr><td><b>W7 VERIFY</b></td><td>3 + 6 fixes + 2 gate passes</td><td><b>CLOSED</b></td><td>prerender ✔ · button 9.04:1 ✔ · 35/35 headers ✔ · 13/13 routes ✔</td><td class="g">PASS</td></tr>
+      <tr><td><b>W8 HANDOFF</b></td><td>opening</td><td class="o"><b>in flight</b></td><td>5 docs + dashboard + tarball</td><td>—</td></tr>
+    </table>
+    <div class="sm" style="margin-top:9px">Rows copied from the ledger's §WAVES table. <b>Delegate counts are the ledger's own wording</b> — they are not summed into a single total here, because the ledger does not record one, and a total invented on this page would become a number with two homes. Where later §-sections give a wave's own count (§W3 "12 delegates", §W4 "18 delegates") those agree with this table.</div>
+  </div>
+
+  <!-- ======================= VERIFICATION NUMBERS ======================= -->
+  <div class="two">
+    <div class="panel" style="margin-bottom:0">
+      <div class="pt">🔬 VERIFICATION — the four command gates, with denominators</div>
+      <div class="legend">
+        <b>THREE STATES, never collapsed:</b>
+        <span class="st st-p">PRESENT</span> measured and there ·
+        <span class="st st-a">ABSENT</span> measured and <i>not</i> there ·
+        <span class="st st-n">NOT-MEASURED</span> nobody looked ·
+        <span class="st st-c">CANNOT-TELL</span> looked, could not decide.<br>
+        <b>A bare "PASS" is weaker than a PASS with a denominator</b> — so the denominator is shown wherever the ledger gives one.
+      </div>
+      <table>
+        <tr><th>W7 FINAL GATE — CHECK</th><th>DENOMINATOR</th><th style="width:10%">EXIT</th></tr>
+        <tr><td><code>npx tsc --noEmit</code></td><td><b>66 = 60 repo + 6 <code>.next/types</code></b> · 0 errors</td><td class="g">0</td></tr>
+        <tr><td><code>npm run lint</code></td><td><b>64 files</b> (floor held) · 0 errors · 0 warnings</td><td class="g">0</td></tr>
+        <tr><td><code>npx vitest run</code></td><td>21 files · 261 tests · <b>260 passed · 1 skipped</b></td><td class="g">0</td></tr>
+        <tr><td><code>npm run build</code></td><td><b>0 <code>⚠</code></b> by glyph</td><td class="g">0</td></tr>
+      </table>
+      <div class="sm" style="margin-top:9px;background:#FDF3E6;border:1.5px solid #C9781A;border-radius:7px;padding:9px 11px">⚠️ <b>The two file counts measure different sets</b> — <b>60 repo files</b> for <code>tsc</code>, <b>64 examined</b> by ESLint — because <code>tests/e2e/**</code> is linted but sits outside the <code>tsconfig</code> include. <b>Not a defect; worth knowing before someone reconciles them.</b> <span class="cite">§W7 final gate, footnote</span></div>
+      <div class="sm" style="margin-top:10px"><b>⭐ PRERENDERING — proved THREE ways, never from the route table.</b> Files on disk: <code>he.html</code>, <code>he.rsc</code>, <code>en.html</code>, <code>en.rsc</code>, <code>_not-found.html</code>, <code>_not-found.rsc</code> all <span class="st st-p">PRESENT</span> · <code>prerender-manifest.json</code> <code>routes</code> = <b>7</b> · on the wire <b><code>s-maxage=31536000</code> + <code>x-nextjs-cache: HIT</code></b> for both locales, <b>not one</b> <code>private, no-cache, no-store</code>. <b>4 → 7.</b> The two still dynamic are correctly so: a catch-all that calls <code>notFound()</code> and a POST handler. <span class="cite">§W7 final gate</span></div>
+      <div class="sm" style="margin-top:9px"><b>Also at the final gate:</b> security <b>35/35</b> (7 headers × 5 route types), <code>X-Powered-By</code> <span class="st st-a">gone</span> · method grid <b>12/12</b> (GET/HEAD 200, POST/PUT/DELETE <b>405 + <code>Allow</code></b>, OPTIONS <b>204 + <code>Allow</code></b>) · <b>13/13</b> ledger-green routes hold, including <b>0</b> <code>Set-Cookie: NEXT_LOCALE</code> across every probe · memorial facts <b>6/6</b> · <code>/api/lead</code> 422 / <b>503, not 200</b> / 405 · the button at <b>9.04:1</b> in Chromium rev 1243 by computed style, <b>0 console errors</b>. <span class="cite">§W7 final gate</span></div>
+    </div>
+
+    <div class="panel g" style="margin-bottom:0">
+      <div class="pt g">✔ WHAT SURVIVED INDEPENDENT VERIFICATION</div>
+      <div class="sm" style="margin-bottom:8px">The ledger's own answer to <i>"what is done"</i> — from the W7 final gate, by three verifiers <b>none of whom wrote any of it</b>. <span class="cite">§W7 "What survived independent verification"</span></div>
+      <ul>
+        <li>Both locales <b>prerender</b> with correct <code>lang</code>/<code>dir</code></li>
+        <li><code>/</code> <b>deterministic</b> across every <code>Accept-Language</code> and a contrary cookie</li>
+        <li><b>13/13 sections in both locales</b></li>
+        <li><b>Key parity</b> with only the two documented source-only keys, <b>enforced by a test that derives its expectation</b></li>
+        <li>The lead API <b>honest</b> — 422 / <b>503 rather than a false 200</b> / 405</li>
+        <li><b>SEO ships</b>, including an OG card at <b>200 · <code>image/png</code> · 1200×630</b> on a route never once successfully invoked before tonight</li>
+        <li><b>7 security headers everywhere</b></li>
+        <li><b>The button visible at 9.04:1 with a working focus ring</b></li>
+        <li><b>No memorial fact ever invented</b> across ~50 delegates</li>
+        <li><b>Quarantine intact</b>, byte-identical</li>
+        <li><b>The customer's build never touched</b></li>
+      </ul>
+      <div class="sm" style="margin-top:10px;border-top:1px solid #E7ECF1;padding-top:9px"><b>W7-C's sentence, which is the finding behind the finding:</b><br><b>“Every file proved itself; nothing proved the composition.”</b> Nine of its defects sat not in the logic any delegate reasoned about, but in the layer around it — the build's route table, the response headers, the HTTP-method dimension, and the moment a body cap fires. <span class="cite">§W7 · W7-C</span></div>
+    </div>
+  </div>
+
+  <!-- ======================= THREE-STATE TALLIES ======================= -->
+  <div class="grid">
+    <div class="card done"><div class="badge b-done">W7-A · STATIC</div>
+      <div class="ct">Four gates green · nine items did not survive</div>
+      <div class="cm">read the code, ran the commands <span class="cite">§W7 · W7-A</span></div>
+      <ul>
+        <li><code>tsc</code> 0 errors / <b>60 repo files</b> · <code>lint</code> 0 / <b>61 examined</b> · <code>vitest</code> <b>260 passed · 1 skipped</b> (skip proven legitimately dormant) · <code>build</code> <b>0 <code>⚠</code></b> by glyph</li>
+        <li><b>Memorial-fact integrity 5/5</b> after 40+ delegates</li>
+        <li>Structural invariants held: <b>0/13</b> default exports · <b>0</b> code <code>background-image</code> · <b>0</b> code inlined constants · <b>0</b> Hebrew codepoints across <b>26</b> section files · <code>'use client'</code> <b>bare 11 vs structural 2</b> — a bare gate would over-report <b>5.5×</b></li>
+        <li class="r">Did not survive (9): DoD item 4 <span class="st st-a">wholly absent</span> (0 Playwright specs, 0 config, yet <code>"e2e": "playwright test"</code> is declared — <code>npm run e2e</code> is a <b>dead script</b>) · <code>vitest.config.ts</code>'s <code>exclude: ['e2e/**']</code> never matches the real path <code>tests/e2e/**</code>, <b>a no-op exclude</b> · and 6 further text-inspection assertions of the D-38 class</li>
+      </ul>
+    </div>
+
+    <div class="card done"><div class="badge b-done">W7-B · BROWSER</div>
+      <div class="ct">First time anyone has looked at this site</div>
+      <div class="cm">4 full-page screenshots at <code>artifacts/screenshots/</code> <span class="cite">§W7 · W7-B</span></div>
+      <ul>
+        <li><b>Zero horizontal overflow at all four measurements</b> (390 and 1440 × he and en)</li>
+        <li>&lt;html lang="he" dir="rtl"&gt; / lang="en" dir="ltr" — <b>the W1 customer defect does not reproduce</b>. Mirroring confirmed on asymmetric elements</li>
+        <li><b>A11y, counted not impressionistic:</b> 26 images, <b>0 without <code>alt</code></b>, 9 <code>alt=""</code> decorative, 17 non-empty · 32 headings, single <code>h1</code>, <b>0 skipped levels</b> · <b>5/5</b> form controls labelled · switcher <b>keyboard-reachable at tab stop 1</b> · <b>0 console errors, 0 failed requests, 0 image 404s</b> across all four runs</li>
+        <li class="o"><b>It caught its own instrument lying:</b> its first screenshots showed every below-the-fold section as <b>flat black rectangles</b> — <code>loading="lazy"</code> images do not paint into Playwright's <code>fullPage</code> stitch. It regenerated and <b>flagged the trap for whoever screenshots this site next</b></li>
+      </ul>
+    </div>
+
+    <div class="card now"><div class="badge b-now">W7-C · ADVERSARIAL</div>
+      <div class="ct">~160 requests · 21 attack classes</div>
+      <div class="cm">the three-state tally, never collapsed <span class="cite">§W7 · W7-C</span></div>
+      <div class="row"><div class="sm" style="line-height:2.1">
+        <span class="st st-p">PRESENT (handled) 11</span>
+        <span class="st st-a">ABSENT (broken) 9</span>
+        <span class="st st-n">NOT-MEASURED 1</span>
+      </div></div>
+      <ul>
+        <li><b>Survived convincingly:</b> lead endpoint <b>34/34</b> · locale and path attacks <b>51/51</b> (traversal, response-splitting, <code>Accept-Language</code> injection — <b>nothing 500'd, no file ever served</b>) · catalogue schema rejecting <b>20/20</b> mutants <b>by exact dotted path</b> · <b>no secret, env name or stack frame in any response body</b></li>
+        <li><b>The memorial reads without JavaScript:</b> 4,389 visible chars on <code>/he</code>, 6,051 on <code>/en</code>, with only <b>14 characters</b> behind a suspense boundary</li>
+        <li>⚠️ <b>The 9 ABSENT are not silently rolled into the final gate's greens.</b> The ledger names their closures and deferrals individually — D-46 (the button), D-49 (method grid), D-51 (headers). <b>Two remain open by decision:</b> <b>D-52</b> <code>script-src</code> unset, recorded OPEN not papered over · <b>D-50</b> <code>TRACE</code> → 500, <span class="st st-c">DEFERRED</span> to the proxy/CDN layer, <b>not fixable from this repo</b></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ======================= DECISIONS ======================= -->
+  <div class="panel">
+    <div class="pt">⚖️ §DECISIONS — 53 seat judgements, and <b>every single one is priced</b></div>
+    <div class="lede"><b>53 numbered decisions, D-1 through D-53, contiguous with no gaps.</b> <b>53 of 53 carry a non-empty “Cost to REVERSE” cell</b> — this dashboard counted the column rather than trusting the claim, and found <b>0 rows with an empty or placeholder cost</b>. <b>D-21 is recorded as SUPERSEDED rather than deleted</b>, so the reasoning chain stays legible. <span class="cite">§DECISIONS, counted at render time</span></div>
+    <div class="sm" style="margin-bottom:10px"><b>Why this column exists:</b> a decision without a price is an opinion. Below are ten of the 53, with the reversal cost <b>quoted from the ledger, not summarised</b> — the other 43 read the same way.</div>
+    <table>
+      <tr><th style="width:6%">#</th><th style="width:41%">DECISION (abridged — the ledger holds the full text)</th><th>COST TO REVERSE — verbatim</th></tr>
+      <tr><td><b>D-2</b></td><td>Install <b>zero</b> shadcn <code>ui/*</code> speculatively — W1 proved 0 of 49 are used by any section</td><td><code>npx shadcn@latest add &lt;name&gt;</code> ≈ 2 min per component. <b>This removes a capability rather than adding a check</b> — the class “dead ui file accumulates” becomes impossible to construct, not merely absent.</td></tr>
+      <tr><td><b>D-8</b></td><td><code>lectureItems[3]</code> (the empty string paired with a 4th image) is handled explicitly — never an empty <code>&lt;h_&gt;</code>, never an invented sentence</td><td>Delete the conditional and add the string, ≈ 2 lines, once the customer supplies it.</td></tr>
+      <tr><td><b>D-11</b></td><td>The four in-page anchors <code>#top</code> <code>#story</code> <code>#form</code> <code>#copyright</code> are a contract; every CTA depends on them</td><td>Re-add 4 <code>id</code> attributes, ≈ 4 lines.</td></tr>
+      <tr><td><b>D-15</b></td><td>The favicon is W6's — it was left unclaimed when the hand-written <code>&lt;link rel="icon"&gt;</code> was correctly removed</td><td>Delete one file.</td></tr>
+      <tr><td><b>D-24</b></td><td><code>/</code> redirects to <code>/he</code> <b>unconditionally</b> — locale detection disabled, because a link shared in WhatsApp must not open in a different language per recipient</td><td>One line (<code>localeDetection</code>) in <code>i18n/routing.ts</code>. <b>What is given up, recorded rather than implied:</b> browsers preferring English no longer land on <code>/en</code> automatically, so the language switcher becomes the only discovery path for English.</td></tr>
+      <tr><td><b>D-27</b></td><td><code>app/not-found.tsx</code> is KEPT — <b>the project had two 404 pages and owned one; it now owns its only one</b></td><td>Delete one file. <code>app/[locale]/not-found.tsx</code> is <b>NOT dead</b> and must not be quarantined — it owns the <code>[locale]</code> boundary and is still the project's only 404 page.</td></tr>
+      <tr><td><b>D-31</b></td><td>Sections export ONE named export. No default export.</td><td>Delete one line per file, ×13. The three hedged files need the loser removed at the W4 fix-up.</td></tr>
+      <tr><td><b>D-43</b></td><td>The locale layout's <code>metadataBase</code> is KEPT though now redundant — <b>redundant is not dead</b>, and the two consumers cannot drift</td><td>Delete one line. <b>Kept because:</b> the root's coverage is by construction while the locale's is an explicit same-valued override that documents intent at the locale boundary — and because the two cannot disagree, which is the only thing law 6 actually forbids.</td></tr>
+      <tr><td><b>D-46</b></td><td><code>gold</code> is defined ONCE in <code>tailwind.config.ts</code> — <b>the token is defined, the 12 instances are NOT patched</b></td><td>Delete one line. <b>No second gold value exists:</b> the hue lives only at <code>app/globals.css:70</code> <code>--accent: 40 60% 55%</code>, and the measured <code>rgb(209,163,71)</code> is exactly that.</td></tr>
+      <tr><td><b>D-52</b></td><td><code>script-src</code> deliberately NOT set — a nonce-free <code>'unsafe-inline'</code> <b>stops zero XSS and buys only a scanner badge</b>, so the gap is recorded OPEN</td><td><b>Closer: a nonce minted in <code>middleware.ts</code> and read by the header config — crosses two write-sets, so it is a deliberate decision, not a one-file fix.</b> Every unset directive is named in the file's own HONEST LIMIT.</td></tr>
+    </table>
+  </div>
+
+  <!-- ======================= OPEN + DEFERRED ======================= -->
+  <div class="two">
+    <div class="panel" style="border-color:#C9781A;margin-bottom:0">
+      <div class="pt o" style="color:#C9781A">👤 §OPEN — 13 items, each with a named closer</div>
+      <div class="sm" style="margin-bottom:9px">The ledger's §OPEN table holds <b>13 numbered items</b>. Its FIRST ACTION block speaks of <b>“the remaining 8 one-edit items”</b>, and §OPEN's preamble says <b>“All eight are seeded from <code>ravid_website1</code>”</b> — that framing maps to rows 1–8, the ones wired to a typed constant at a named <code>file:line</code>. <b>Rows 9–13 were added by later waves and are not all one-edit.</b> Both figures are shown rather than silently reconciled; only the seat can settle which the ledger means. <span class="cite">§FIRST ACTION vs §OPEN table</span></div>
+      <table>
+        <tr><th style="width:6%">#</th><th>QUESTION</th><th style="width:29%">NAMED CLOSER</th></tr>
+        <tr><td>1</td><td><b>Instagram handle</b> — ours <code>ravid._.t</code> vs customer's <code>ravid_.t</code> (one character)</td><td>Mati/customer answer → <code>config/site.ts:78</code>; <code>:82</code> is DERIVED, so <b>one edit, not two</b> · constant landed by W4</td></tr>
+        <tr><td>2</td><td><b>Lead destination email</b> — the only address found in either repo</td><td>env var <b>name only</b>, never a value in a file, + a public display fallback · landed by W5-A</td></tr>
+        <tr><td>3</td><td><b>Publishable numbers</b> — ours say 300+/15+, customer's say +1000/+57/1400</td><td><code>messages/he.json</code> + <code>en.json</code> · W3-B</td></tr>
+        <tr><td>4</td><td><b>Wine shop links</b> — keep <code>wineandfriends.co.il</code> as-is?</td><td>4 constants in <code>config/site.ts</code> · landed by W4</td></tr>
+        <tr><td>5</td><td><b>Domain / canonical URL</b> — <b>zero occurrences in EITHER repo</b>; the only source is the plan itself</td><td>env-first (D-14) → constant fallback · landed by W5-B</td></tr>
+        <tr><td>6</td><td><b><code>lectureItems[3]</code> is an empty string</b> paired with a 4th image — missing sentence, or an intentional image-only row?</td><td>Both catalogues; component behaviour already fixed by <b>D-8</b> · W4</td></tr>
+        <tr><td class="r">7</td><td class="r"><b>Three hero unit badges carry facts only in <code>alt</code> text</b> — they exist <b>nowhere</b> in <code>translations.ts</code>. Do they become real copy?</td><td class="r"><b>the family</b> — he-only, <span class="st st-a">ABSENT in en.json</span>, confirmed by a full-tree grep (no English exists). Mechanism fixed by <b>D-18</b></td></tr>
+        <tr><td>8</td><td><b>Do our own 7 photos stay?</b> — in our repo and <b>not</b> in the customer's build</td><td>Mati · kept pending an answer; additive, breaks no budget</td></tr>
+        <tr><td class="r">9</td><td class="r"><b>Hebrew 404 copy</b> — the customer's own <code>NotFound.tsx</code> is <b>English-only</b>; a full grep found no Hebrew 404 copy anywhere in their material. <b>Hebrew is ABSENT and OWED — never invented.</b></td><td class="r"><b>needs one Hebrew sentence from the family</b> — ⚠️ see the warning at the top of this page</td></tr>
+        <tr><td>10</td><td><b><code>militaryCards</code> icons</b> — three emoji hardcoded as position-indexed decoration in the customer's build, with no catalogue entry. <b>A visible design difference — recorded so it is not mistaken for a regression.</b></td><td>W7 decides: add 3 keys (transcription, permitted) or accept their absence</td></tr>
+        <tr><td>11</td><td><b><code>formSending</code> and <code>formError</code> do not exist in the catalogue</b> — because the customer's site never shows a failure. <b>A failing user is never told, in a sentence, that the send failed.</b></td><td><b>needs two sentences from the customer</b>; everything else is already wired to render them</td></tr>
+        <tr><td>12</td><td><b>The site <code>&lt;title&gt;</code> no longer carries the speaker's name</b> — no catalogue key exists for it, so the title is the motto alone. A real discoverability loss for a lecture-booking site.</td><td><b>needs the customer's preferred title</b>, then one line in <code>lib/seo.ts</code></td></tr>
+        <tr><td>13</td><td><b>The OpenGraph share card renders ENGLISH for both locales</b> — <code>next/og</code> ships exactly one Latin-only face and there are <b>0 font files</b> in this repo outside <code>node_modules</code>. <b>Deliberate:</b> a restrained card that renders beats one full of tofu boxes. ⚠️ <b>Nobody has looked at this image</b> — its pixels are <span class="st st-n">NOT-MEASURED</span>.</td><td><b>Closer: add a licensed Hebrew face + a per-locale image route.</b> Matters because this memorial is shared in bereavement groups, where the unfurl <i>is</i> the first impression</td></tr>
+      </table>
+      <div class="sm" style="margin-top:9px"><b>Also OPEN, not one-edit:</b> wine prices are absent from both repos — <span class="st st-n">NOT-MEASURED</span>, closable only by the customer or by fetching the 4 shop pages. <span class="cite">§OPEN footer</span></div>
+    </div>
+
+    <div>
+      <div class="panel n" style="margin-bottom:16px">
+        <div class="pt n">⏸️ §DEFERRED — 6 items, each with what would close it</div>
+        <table>
+          <tr><th>ITEM</th><th style="width:42%">WHAT WOULD CLOSE IT</th></tr>
+          <tr><td><b>Comment churn</b> — the cookie-gating fact is documented in TWO files, and three delegates edited comments about it in sequence. <b>The patch-over-a-patch spiral in comment form</b>; root cause is ONE FACT TWO PLACES.</td><td>Give the fact ONE owner — <code>i18n/routing.ts</code> — and have <code>middleware.ts</code> point at it rather than restate it. Comment-only, 2 files. <b>Not done tonight: a fourth comment edit before the structural fix would be the very spiral it describes.</b></td></tr>
+          <tr><td>Runtime proof that <code>i18n{}</code> is ignored under App Router</td><td>W2's first <code>npm run build</code></td></tr>
+          <tr><td>Whether our 11 <code>docs/*</code> are content of record or superseded scratch</td><td><b>A human call</b> — Mati's review of <code>_legacy/WHY.md</code>; nothing imports any of them</td></tr>
+          <tr><td>Rendered-page truth for the customer build</td><td>W7-B playwright, or Mati opening the customer site</td></tr>
+          <tr><td>Wine prices</td><td>Customer answer, or fetching the 4 product pages</td></tr>
+          <tr><td>Consequences of applying the real <code>Translations</code> type to <code>t</code></td><td>W3's first <code>tsc --noEmit</code></td></tr>
+        </table>
+        <div class="sm" style="margin-top:9px"><b>Further deferrals live inside §DECISIONS rather than this table</b>, each with a named closer: <b>D-17</b> (<code>vitest.config.mts</code> rename) · <b>D-22</b> (eager catalogue validation) · <b>D-26</b> (404 <code>lang</code>/<code>dir</code> — needs an <b>experimental</b> Next flag, refused unattended on a memorial site) · <b>D-35</b> (<code>lang</code> annotation on Hebrew <code>alt</code>) · <b>D-36</b> (extract <code>mailer.ts</code> as a test seam) · <b>D-47</b> (three gold follow-ups) · <b>D-50</b> (<code>TRACE</code> → proxy/CDN) · <b>D-52</b> (CSP nonce).</div>
+      </div>
+
+      <div class="panel" style="border-color:#C9781A;margin-bottom:0">
+        <div class="pt" style="color:#C9781A">💰 BUDGET — recorded, never quietly forgiven</div>
+        <table>
+          <tr><th>WAVE</th><th>BRIEFED</th><th>ACTUAL</th><th>FACTOR</th></tr>
+          <tr><td>W1</td><td>180k</td><td>266,973</td><td class="o">1.48×</td></tr>
+          <tr><td>W2</td><td>413k</td><td>908,728</td><td class="o">2.20×</td></tr>
+          <tr><td>W3</td><td>550k</td><td>≈1,245k</td><td class="o">2.26×</td></tr>
+          <tr><td>W4</td><td>≈1,015k</td><td>≈1,706k</td><td class="o">1.68×</td></tr>
+          <tr><td>W5</td><td colspan="3"><span class="st st-n">NOT RECORDED</span> — the ledger has no W5 budget table</td></tr>
+          <tr><td>W6</td><td colspan="3"><span class="st st-n">NOT RECORDED</span> — the ledger has no W6 budget table</td></tr>
+          <tr><td>W7</td><td>≈600k</td><td>≈1,240k</td><td class="o">2.07×</td></tr>
+        </table>
+        <div class="sm" style="margin-top:9px"><b>The finding, not just the number:</b> the overrun is roughly constant at <b>~1.3–1.8×</b> regardless of task difficulty, and <b>the most mechanical task (quarantine, sonnet) overran the most at 2.57×</b>. <b>The brief itself is the cost driver, not the work.</b> Splitting briefs (D-9) did not reduce the factor — it reduced the blast radius per delegate. <b>Budgets were split, never raised</b> (D-9). <span class="cite">§W2 budget ledger · D-9</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================= HONEST LIMITS ======================= -->
+  <div class="panel r">
+    <div class="pt r">⚠️ HONEST LIMITS — what is NOT known, kept NOT known</div>
+    <div class="lede"><b>Nothing on this page rounds a <span class="st st-n">NOT-MEASURED</span> into a tick, or a <span class="st st-c">CANNOT-TELL</span> into a pass.</b> These are the ledger's own limits, carried across rather than trimmed for a cleaner dashboard.</div>
+
+    <div class="two" style="margin-bottom:0">
+      <div>
+        <table>
+          <tr><th>STILL UNMEASURED / UNDECIDED</th><th style="width:24%">STATE</th></tr>
+          <tr><td>The OpenGraph card's <b>pixels</b> — satori/resvg are never invoked without a build, so <b>nobody has looked at this image</b> <span class="cite">§OPEN 13</span></td><td><span class="st st-n">NOT-MEASURED</span></td></tr>
+          <tr><td><b>Wine prices</b> — absent from both repos, no network this session <span class="cite">§OPEN · §NOT-MEASURED 6</span></td><td><span class="st st-n">NOT-MEASURED</span></td></tr>
+          <tr><td>One of W7-C's <b>21 attack classes</b> <span class="cite">§W7 · W7-C</span></td><td><span class="st st-n">NOT-MEASURED</span></td></tr>
+          <tr><td><b>The DYNAMIC 404 path</b> (<code>/[locale]/[...rest]</code> → <code>notFound()</code>) was <b>NOT RE-MEASURED</b> this pass. <b>Re-check before claiming D-26 fully closed</b> — the verifier scoped its own finding honestly rather than claiming the whole <span class="cite">§W7, finding (1)</span></td><td><span class="st st-n">NOT-MEASURED</span></td></tr>
+          <tr><td><code>app/[locale]/page.tsx</code> <b>byte-identity</b> after a probe — confirmed structurally, but <b>no baseline hash was taken at W4</b>, so byte-identity cannot be asserted. Its adopted recommendation: <b>hash probe files BEFORE an experiment, not after</b> <span class="cite">§W7, finding (2)</span></td><td><span class="st st-c">CANNOT-TELL</span></td></tr>
+          <tr><td><code>curl</code> in this sandbox — 30 attempts all <code>000</code>; routing was proved with a Node loopback client instead <span class="cite">§W3</span></td><td><span class="st st-n">NOT-MEASURED</span></td></tr>
+          <tr><td>W1's three-state tally over its own inventory: <b>PRESENT 54 · measured-ABSENT 18 · NOT-MEASURED 8</b> <span class="cite">§W1</span></td><td><span class="st st-n">8 of 80</span></td></tr>
+          <tr><td>W1's 36 checked plan premises: <b>CONFIRMED 22 · FALSE 8 · CANNOT-TELL 3 · SPLIT 1 · NOT-MEASURED 2</b> <span class="cite">§W1</span></td><td><span class="st st-c">3 + 2</span></td></tr>
+        </table>
+      </div>
+      <div>
+        <div class="sm" style="background:#FDF3E6;border:1.5px solid #C9781A;border-radius:7px;padding:10px 12px;margin-bottom:12px"><b>⚠️ THE CLOSEST CALL OF THE NIGHT — page weight, stated plainly because it is close.</b><br>
+        Measured with browser-equivalent headers: <b>first-paint transfer 217,611 B (0.218 MB)</b> against a 1.5 MB gate — <b>1.28 MB of headroom</b>, <b class="g">PASS</b>. <b>But full-scroll total is 1,511,331 B</b> — judged against full-scroll instead, <b class="r">the page is over by 11,331 B (0.76%), and that reading FAILS marginally</b>. <b>The choice of metric is Mati's, not a delegate's.</b> Two honest upper bounds were recorded: the probe fetched each image's largest srcset candidate, so a real browser on a phone transfers <b>less</b> than every number above. <span class="cite">D-40 / D-41</span></div>
+
+        <div class="sm" style="background:#F7F9FB;border:1.5px solid #7A8A99;border-radius:7px;padding:10px 12px;margin-bottom:12px"><b>⚠️ TWO PARTS OF THE LEDGER ARE W1-SCOPED AND WERE NOT UPDATED.</b><br>
+        The <b>§NOT-MEASURED REGISTER (8 items)</b> and the <b>§HONEST LIMIT OF THIS LEDGER</b> both describe the state <i>“before any code was written”</i> — register items such as <i>“runtime behaviour of either site”</i>, <i>“build / lint / tsc exit codes — read from <code>package.json</code>, never executed”</i> and <i>“the rendered page in any browser”</i> <b>have since been measured</b> and appear elsewhere in the same ledger (§W7 final gate, §W7 · W7-B). <b>This dashboard does not resolve that</b> — rewriting the ledger is not this page's write-set. <b>Flagged for the seat.</b> The register's still-current items are listed at left. <span class="cite">§NOT-MEASURED · §HONEST LIMIT</span></div>
+
+        <div class="sm" style="background:#F7F9FB;border:1.5px solid #7A8A99;border-radius:7px;padding:10px 12px"><b>⚠️ TWO CONTRADICTIONS THE LEDGER KEEPS OPEN ON PURPOSE.</b><br>
+        <b>(1)</b> Two delegates measured <code>npm run lint</code>'s file count and disagreed (<b>0</b> vs <b>4</b>). FIX-D's instrumented numbers were adopted; <b>FIX-A's 0 is unexplained and NOT reproduced — recorded as unresolved, not discarded</b>. <b>The verdict is unchanged under either number</b>, because the defect was never the count: it was a partial sweep announced as a clean one. <b>(2)</b> Three delegates reported <code>tsc</code> file counts of 25, 26 and 28; resolved by partitioning — <b>the stable number to quote is the repo half</b>, since the artefact half gains one file per route. <span class="cite">§W2 · §W3</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================= METHOD ======================= -->
+  <div class="panel">
+    <div class="pt">🔎 THE METHOD, IN THE NUMBERS IT PRODUCED</div>
+    <div class="half" style="margin-bottom:0">
+      <div>
+        <ul>
+          <li><b>Delegates caught false premises in their own briefs — including the seat's.</b> The ledger's running tally reads <b>5, three of them the seat's own</b> — <b>but that line was last updated at W3 and was never revised</b>, while later waves record further corrections individually (D-33 image pairing · D-34 stats count · D-36 an unbuildable instruction · D-50 a diagnosis false on two counts · the W4 asset contract 24→25 · the W6 favicon size). <b>No total is given here, because the ledger holds none.</b> <span class="cite">§W3 line 304</span></li>
+          <li><b>The ledger caught two of its own stale figures tonight.</b> The quarantine count read <b>65 (17 + 48)</b> and the truth was <b>66 (18 + 48)</b> — a file quarantined by W3-A <i>after</i> the figure was taken. <b>“Not a defect — a ledger figure that outlived its measurement, which is exactly what a stale count looks like.”</b> And <code>config/site.ts</code>'s line citations drifted twice. <span class="cite">§W2 quarantine · §OPEN preamble</span></li>
+          <li><b>Four instruments were caught misreporting in one night</b>, every one by comparing against a value already known to be true: a Hebrew detector that could not find Hebrew (<code>perl</code> without <code>-CSD</code>) · <code>grep -ci 'warn'</code> missing the <code>⚠</code> glyph · a page-weight probe sending no <code>Accept-Encoding</code> · a CSS probe reading a stale server. <span class="cite">D-45 · D-48</span></li>
+          <li><b>A delegate that wrote nothing, and was right.</b> W5-FIX-2 made <b>zero edits</b> — told to fix a line, it verified the line was already correct, <b>refused to touch a file measured green over HTTP</b>, and traced the real cause elsewhere. <b>The gate recorded that refusal as the right call.</b> <span class="cite">§W5</span></li>
+        </ul>
+      </div>
+      <div>
+        <ul>
+          <li><b>The measurement that justifies the whole test discipline.</b> W4-08 broke the testimonial attribution pairing on purpose. <b>The test “every text, icon and name is rendered” STAYED GREEN</b> — a bereaved family's quotation rendered beside the wrong attribution, and the obvious test passed. Only the assertion that each quote and <b>its own</b> attribution appear <i>within the same card</i> went red. <b>“Both present somewhere on the page” is not a test of attribution.</b> <span class="cite">§W4</span></li>
+          <li><b>A green that was verified to be a real green, not a narrowed one.</b> One <code>tsc</code> invocation produced <b>one probe file clean and a second file red</b> in the same run — <b>the best available evidence that a green is a checker still looking</b>. <span class="cite">§W2 gate pass 3</span></li>
+          <li><b>A failure predicted in writing, in the file it broke — and ignored anyway.</b> <code>middleware.ts</code>'s own note named the wave, the change and the failure mode; W5 made exactly that change and did not re-read it. <b>That is why the fix was a guard test, not a third, better comment.</b> <span class="cite">D-42 · D-44</span></li>
+          <li><b>The asset contract was corrected by the seat cross-checking two of its own records.</b> The gate reported <b>24</b> referenced images; a source sweep found <b>25</b>. The missing one was <code>form-bg-tank</code> — <b>the background of the lead form, the site's only business function.</b> Had W6 been handed 24, that asset would never have been produced. <span class="cite">§W4</span></li>
+          <li><b>W6, on looking at the photographs itself:</b> it reported in plain words that it would be comfortable showing them to the family, and noted <b>the photographer's credit watermark on the portrait is legible and intact — cropping would have removed it.</b> A concrete reason the no-crop rule earned its place. <b>25 in · 25 out · 0 cropped · 0 upscaled · 0 renamed · 0 writes to the customer repo.</b> <span class="cite">§W6</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <b>PROVENANCE.</b> Every figure above is read from <code>REBUILD_STATUS_v1_00.md</code> and cited to its section. Two counts on this page were <b>derived at render time by counting the ledger's own rows</b> rather than read from a sentence, and are marked as such: the <b>53</b> decisions (D-1…D-53, contiguous) and the <b>53/53</b> that carry a non-empty reversal cost. Three Hebrew strings in the FIRST ACTION block were <b>extracted programmatically from the ledger file</b>, never retyped, and verified byte-identical against both places the ledger holds them.<br>
+    <b>WHAT THIS PAGE IS NOT.</b> It is not a second home for any number. If a count changes, it changes in the ledger, and this page is regenerated from it — a figure retyped here would become the third copy that disagrees first.<br>
+    <b>Renders offline from <code>file://</code> — zero external requests: no external CSS, no web font, no script, no image, no network of any kind.</b>
+  </div>
+
+</div>
+</body>
+</html>

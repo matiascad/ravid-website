@@ -1,32 +1,111 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   W2-A2a SHELL+TOKENS · app/globals.css
+   INVARIANT     Every colour in this project is an HSL triple stated exactly once,
+                 here, in :root. No component, no config and no other stylesheet
+                 states a colour value; they may only NAME one. ONE FACT ONE PLACE.
+   IMPOSSIBLE    A colour cannot DRIFT between a light and a dark definition,
+                 because there is no second definition to drift from: there is one
+                 :root, no `.dark` block, and no `prefers-color-scheme` block. The
+                 class "the same token has two values and the wrong one wins" is
+                 not CONSTRUCTIBLE without first adding a second palette, which is
+                 a visible structural edit, not an accidental one. Likewise a
+                 render-blocking webfont cannot be introduced here: there is no
+                 @import and no @font-face - the font arrives only as the
+                 --font-heebo variable set by next/font in app/layout.tsx.
+   CLASS         Closed by derivation for COLOUR and for FONT-DELIVERY across the
+                 whole project: tailwind.config.ts admits colours only as
+                 `hsl(var(--x))`, and the only definitions of those variables are
+                 the 22 below. Any new colour must therefore be added here or it
+                 does not exist. NOT closed for spacing, z-index, shadows or
+                 animation timing - those remain stock Tailwind, unconstrained.
+   HONEST LIMIT  THERE IS EXACTLY ONE THEME, AND IT IS DARK. The customer's :root
+                 is already dark and has no `.dark` block, so this file ships no
+                 light palette. A user with a light-mode preference gets the dark
+                 site. That is a deliberate single-source-of-truth choice, not an
+                 oversight; adding a light palette later means adding a SECOND
+                 value for all 21 colour tokens and re-auditing every contrast
+                 pair. `darkMode: ['class']` in tailwind.config.ts is therefore
+                 inert today - no element carries `.dark` and no `dark:` variant
+                 will ever match. This file also does not define --font-heebo;
+                 app/layout.tsx does (see the token contract in the W2-A2a report).
+                 REMOVED IN THIS REWRITE: six `.animation-delay-*` utilities that
+                 existed in the previous version of this file. Their only consumer
+                 was components/TuvalMemorialLanding.tsx, which is quarantined
+                 under ledger decision D-1. If a W4 section needs staggered
+                 animation delays it must re-introduce them deliberately.
+   ───────────────────────────────────────────────────────────────────────────── */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ── TOKEN LAYER ────────────────────────────────────────────────────────────
+   Copied verbatim from the customer's design contract. These numbers are the
+   design; they are not to be re-balanced, rounded or "improved" here. Every
+   value is a bare HSL triple (no hsl() wrapper) because tailwind.config.ts
+   wraps them as `hsl(var(--x))` and relies on being able to append an alpha.
+   ────────────────────────────────────────────────────────────────────────── */
+:root {
+  --background: 240 25% 13%;
+  --foreground: 240 10% 92%;
+
+  --bg2: 240 30% 10%;
+  --bg3: 240 35% 7%;
+
+  --card: 240 22% 17%;
+  --card-foreground: 240 10% 92%;
+
+  --popover: 240 22% 17%;
+  --popover-foreground: 240 10% 92%;
+
+  --primary: 233 100% 71%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 233 80% 61%;
+  --secondary-foreground: 0 0% 100%;
+
+  --muted: 240 15% 40%;
+  --muted-foreground: 240 15% 67%;
+
+  --accent: 40 60% 55%;
+  --accent-foreground: 240 25% 13%;
+
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+
+  --border: 240 18% 26%;
+  --input: 240 18% 26%;
+  --ring: 233 100% 71%;
+
+  --radius: 0.5rem;
+}
 
 @layer base {
   * {
     @apply border-border;
   }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground;
+    line-height: 1.7;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-display;
   }
 }
 
-/* Animation delay utilities - moved from inline styles */
-.animation-delay-100 {
-  animation-delay: 100ms;
-}
-.animation-delay-200 {
-  animation-delay: 200ms;
-}
-.animation-delay-300 {
-  animation-delay: 300ms;
-}
-.animation-delay-400 {
-  animation-delay: 400ms;
-}
-.animation-delay-600 {
-  animation-delay: 600ms;
-}
-.animation-delay-800 {
-  animation-delay: 800ms;
+@layer utilities {
+  .text-gold {
+    color: hsl(var(--accent));
+  }
 }

@@ -1,0 +1,87 @@
+ravid_website — packaged handoff snapshot
+Date: 2026-09-12
+Prepared by: W8-C "TARBALL" delegate
+
+TARBALL
+  Filename : ravid_website_2026-09-12.tar.gz
+  Path     : dist/ravid_website_2026-09-12.tar.gz
+  Size     : 4105123 bytes (4,105,123 bytes)
+  SHA-256  : 92e804b5ced51d5d8e9bba9dba667e245d98099b99554e12a5c3c64565576c79
+  Files inside archive (regular files, top-level dir "ravid_website/"): 140
+
+RECONCILIATION (files on disk before packaging vs. archived vs. excluded)
+  Total files on disk (repo root, before packaging)        : 24975
+  Files included in archive                                : 140
+  Files excluded (sum of exclusions below)                 : 24835
+    node_modules/                                          : 24373
+    .next/                                                 : 309
+    .git/                                                  : 95
+    _legacy/.next-stale-next14/                            : 48
+    artifacts/ (screenshots/)                               : 4
+    Claude outputs/                                        : 6
+  Arithmetic: 140 + 24835 = 24975  ✓ (included + excluded = total on disk)
+
+TOP-LEVEL INCLUSION LIST (inside archive, under ravid_website/)
+  app/                        - Next.js app source
+  components/                 - React components
+  components.json
+  config/
+  docs/                       - present but empty (prior contents already deleted pre-existing on disk)
+  eslint.config.mjs
+  i18n/
+  _legacy/                    - quarantine record: 18 replaced source files + WHY.md (19 files); stale build subfolder excluded, see below
+  lib/
+  messages/
+  middleware.ts
+  next.config.js
+  next-env.d.ts
+  package.json
+  package-lock.json
+  postcss.config.js
+  public/                     - static assets, images
+  scripts/
+  tailwind.config.ts
+  __tests__/
+  tests/
+  tsconfig.json
+  tsconfig.tsbuildinfo
+  vitest.config.ts
+  vitest.setup.ts
+  CLAUDE_CODE_PROMPTS_v1_00.md
+  MASTER_PLAN.md
+  OVERNIGHT_RUN_v1_00.md
+  PLAN_DASHBOARD_v1_00.html
+  README.md
+  REBUILD_PLAN_v1.00.md
+  REBUILD_STATUS_v1_00.md
+  REPORT_W1.md
+  SESSION_2_DELTA.md
+  START_HERE.md
+  STATUS_DASHBOARD.html
+  STATUS_DASHBOARD_W7.html
+
+EXCLUSIONS, WITH REASON
+  node_modules/                          (24373 files) - regenerable from package-lock.json via `npm install`; not source.
+  .next/                                 (309 files)   - Next.js build output, regenerable via `npm run build`; not source.
+  .git/                                  (95 files)    - version-control internals, not part of a source/handoff snapshot.
+  _legacy/.next-stale-next14/            (48 files, ~22.7 MB) - stale build output from the old Next 14 tree. It is quarantined
+                                                          (not deleted) inside _legacy/, but it is build output, not source,
+                                                          so it need not travel. The 18 quarantined SOURCE files and
+                                                          _legacy/WHY.md elsewhere in _legacy/ ARE included above, preserving
+                                                          the provenance record of what was replaced and why.
+  artifacts/ (screenshots/)              (4 PNGs, ~20 MB) - QA/verification evidence (rendered screenshots), not source and
+                                                          not needed to read the project or run `npm install`. Excluded to
+                                                          keep the tarball to source + handoff docs.
+  Claude outputs/                        (6 files, ~4 MB) - session working outputs / verification evidence (a review
+                                                          screenshot, an HTML review page, and PNG captures), not source.
+                                                          It also duplicates OVERNIGHT_RUN_v1_00.md, which already travels
+                                                          from the project root as part of the named handoff set. Excluded
+                                                          for the same reason as artifacts/: evidence, not source.
+  dist/ (this directory)                                - the packaging output directory itself; excluded to avoid the
+                                                          tarball attempting to include itself while being written.
+
+NOTES
+  - This is a copy-only snapshot. No source file was modified, moved, or deleted to produce it.
+  - No git operations were performed (no add/commit/tag).
+  - Nothing was uploaded, deployed, or published; the tarball remains on local disk.
+  - Restoring: extract the tarball, `cd ravid_website`, `npm install`, then use the usual Next.js scripts in package.json.

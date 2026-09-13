@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ravid_website rebuild — STATUS after W7-A</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#FFFFFF;color:#14202B;font-family:"Segoe UI",Arial,Helvetica,sans-serif;font-size:15px}
+  .w{width:1240px;margin:0 auto;padding:22px}
+  h1{font-size:31px;margin:0 0 6px 0;color:#1B4F82;font-weight:800}
+  .src{font-size:13px;color:#5B6B7B;margin-bottom:18px}
+  .ovr{border:2px solid #1B4F82;border-radius:10px;padding:16px 18px;display:flex;align-items:center;gap:18px;margin-bottom:20px}
+  .ovr .pct{font-size:44px;font-weight:800;color:#1B4F82;min-width:120px;text-align:center}
+  .ovr .mid{flex:1}
+  .ovr .t{font-weight:800;font-size:17px;text-align:center;margin-bottom:8px}
+  .track{height:16px;background:#E7ECF1;border-radius:8px;overflow:hidden}
+  .fill{height:100%;background:#C9781A}
+  .chips{margin-top:9px;font-size:13px;color:#33475B;text-align:center}
+  .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px}
+  .card{border:2px solid #D7DEE5;border-radius:10px;padding:14px 15px;position:relative}
+  .card.done{border-color:#1B7F3F}.card.now{border-color:#C9781A}.card.plan{border-color:#7A8A99;background:#FAFBFC}
+  .badge{position:absolute;top:-11px;left:14px;font-size:12px;font-weight:800;color:#FFF;padding:3px 9px;border-radius:10px}
+  .b-done{background:#1B7F3F}.b-now{background:#C9781A}.b-plan{background:#5B6B7B}
+  .ct{font-weight:800;font-size:18px;margin:2px 0 3px 0}
+  .cm{font-size:12.5px;color:#5B6B7B;margin-bottom:9px}
+  .row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+  .score{font-size:31px;font-weight:800}
+  .score span{font-size:15px;color:#5B6B7B}
+  .stars{color:#C9781A;font-size:14px;letter-spacing:1px}
+  .sm{font-size:12.5px;color:#33475B}
+  ul{margin:8px 0 0 0;padding-inline-start:18px}
+  li{font-size:12.8px;margin-bottom:5px;line-height:1.4}
+  .mdl{display:inline-block;font-family:Consolas,monospace;font-size:11.5px;font-weight:800;padding:2px 7px;border-radius:4px;background:#E8F0F8;color:#1B4F82;margin-inline-end:4px}
+  .mdl.s{background:#EAF5EE;color:#1B7F3F}.mdl.r{background:#FBE9E7;color:#B3261E}
+  .two{display:grid;grid-template-columns:1.1fr 1fr;gap:16px;margin-bottom:20px}
+  .panel{border:2px solid #D7DEE5;border-radius:10px;padding:14px 15px}
+  .panel.red{border-color:#B3261E}
+  .pt{font-weight:800;font-size:18px;margin-bottom:10px;color:#1B4F82}
+  .pt.red{color:#B3261E}
+  table{width:100%;border-collapse:collapse}
+  th{background:#1B3B5C;color:#FFF;font-size:12.5px;padding:8px 10px;text-align:left}
+  td{font-size:12.6px;padding:7px 10px;border-bottom:1px solid #E7ECF1;vertical-align:top}
+  tr:nth-child(even) td{background:#F7F9FB}
+  .g{color:#1B7F3F;font-weight:800}.o{color:#C9781A;font-weight:800}.r{color:#B3261E;font-weight:800}
+</style>
+</head>
+<body>
+<div class="w">
+
+  <h1>🌙 ravid_website rebuild — STATUS · after W7-A · 12.9.2026</h1>
+  <div class="src">SOURCE: overnight run of CLAUDE_CODE_PROMPTS_v1_00.md v1.01 · law PROMPT_RULES_v1_00.md · ledger REBUILD_STATUS_v1_00.md · REPORT_W1.md + REPORT_W7_static.md · stack Next 15.5.25 · React 19.3.0 · next-intl 4.14.4 · Tailwind 3.4.19</div>
+
+  <div class="ovr">
+    <div class="mid">
+      <div class="t">EXECUTION — 6 waves CLOSED-PASS · W7 partial (A reported, B+C in flight) · W8 pending</div>
+      <div class="track"><div class="fill" style="width:85%"></div></div>
+      <div class="chips">W1 ✅ · W2 ✅ · W3 ✅ · W4 ✅ · W5 ✅ · W6 ✅ · W7 🟠 1 of 3 · W8 ⬜ &nbsp;·&nbsp; ~56 delegates run &nbsp;·&nbsp; 46 decisions priced with reversal cost &nbsp;·&nbsp; 13 OPEN (8 one-edit at file:line) &nbsp;·&nbsp; 0 git · 0 deletes · 0 writes to customer repo · 0 secrets</div>
+    </div>
+    <div class="pct">85<span style="font-size:22px">%</span></div>
+  </div>
+
+  <div class="grid">
+
+    <div class="card done"><div class="badge b-done">✔ PASS</div>
+      <div class="ct">🔍 W1 · recon (read-only)</div>
+      <div class="cm">3 delegates · 0 files written by any of them</div>
+      <div class="row"><div class="score g">100<span>%</span></div><div><div class="stars">★★★★★★★★★★</div><div class="sm">10/10 · <span class="mdl">opus ×2</span><span class="mdl s">sonnet</span></div></div></div>
+      <ul>
+        <li>36 premises → <b>22 CONFIRMED · 8 FALSE · 3 CANNOT-TELL · 1 SPLIT · 2 NOT-MEASURED</b></li>
+        <li>my plan was wrong on 8: 10 blocks not 8 · next@14 not 15 · <b>no delivery path at all</b> · 8.11 MB not 8.7 · <b>4 shadcn used, 37 dead</b> · Knesset = a filename only</li>
+        <li>PRESENT 54 · ABSENT 18 · NOT-MEASURED 8 · 22 red-proofs on zero-result checks</li>
+      </ul>
+    </div>
+
+    <div class="card done"><div class="badge b-done">✔ PASS</div>
+      <div class="ct">🏗️ W2 · scaffold + quarantine</div>
+      <div class="cm">4 + 5 fixes + 3 gate passes · 478 packages</div>
+      <div class="row"><div class="score g">100<span>%</span></div><div><div class="stars">★★★★★★★★★☆</div><div class="sm">9/10 · passed on pass 3</div></div></div>
+      <ul>
+        <li><b>66 items quarantined, 0 deleted</b> — proved by arithmetic in both directions</li>
+        <li>gate FAILED pass 2: closing lint+tests broke <code>tsc</code> (17 errors) — only typecheck could see it</li>
+        <li>🔴 <b>false green caught</b>: lint printed "✔ no errors" over a silently-chosen subset</li>
+      </ul>
+    </div>
+
+    <div class="card done"><div class="badge b-done">✔ PASS</div>
+      <div class="ct">🌐 W3 · i18n core he+en</div>
+      <div class="cm">12 delegates (A–L) + 2 gate passes</div>
+      <div class="row"><div class="score g">100<span>%</span></div><div><div class="stars">★★★★★★★★★★</div><div class="sm">10/10</div></div></div>
+      <ul>
+        <li>/ → /he deterministic across <b>6 header/cookie variants</b>, measured on the wire · <b>0 Set-Cookie</b> in 15 responses</li>
+        <li><b>251 leaves transcribed byte-for-byte, 0 differing</b> · lang/dir extracted verbatim</li>
+        <li>🔴 typed keys proved <b>INERT</b> (one array collapsed the type) → zod accessor + <b>7 next-intl APIs ESLint-banned</b></li>
+      </ul>
+    </div>
+
+    <div class="card done"><div class="badge b-done">✔ PASS</div>
+      <div class="ct">🧩 W4 · 13 sections</div>
+      <div class="cm">13 + ALT + 3 fixes + compose = 19 delegates</div>
+      <div class="row"><div class="score g">100<span>%</span></div><div><div class="stars">★★★★★★★★★★</div><div class="sm">10/10 · <span class="mdl">opus ×19</span></div></div></div>
+      <ul>
+        <li><b>13/13 sections in both locales · 26/26 assertions</b> against served bytes</li>
+        <li>/he 97,827 B · /en 103,005 B · 4 anchors exactly once each · <b>0 Hebrew codepoints in 26 files</b></li>
+        <li>🔴 best proof: broken testimonial attribution stayed GREEN — only the same-card assertion caught it</li>
+      </ul>
+    </div>
+
+    <div class="card done"><div class="badge b-done">✔ PASS</div>
+      <div class="ct">🔌 W5 · platform</div>
+      <div class="cm">3 + 5 fixes + 2 gate passes = 10 delegates</div>
+      <div class="row"><div class="score g">100<span>%</span></div><div><div class="stars">★★★★★★★★★☆</div><div class="sm">9/10 · passed on pass 2</div></div></div>
+      <ul>
+        <li>lead API: <b>422 invalid (mailer called 0) · 503 unconfigured · 502 provider-down · 405 non-POST</b>; 200 unreachable without an observed res.ok</li>
+        <li>OG <b>200 · image/png · 43,996 B · IHDR 1200×630</b> · metadataBase = real origin · build ⚠ 1 → 0</li>
+        <li>🔴 the 307→404 failure was <b>predicted in writing</b> by middleware's own HONEST LIMIT · class was <b>3× larger</b> (/icon, /apple-icon, /twitter-image)</li>
+      </ul>
+    </div>
+
+    <div class="card done"><div class="badge b-done">✔ PASS</div>
+      <div class="ct">🖼️ W6 · assets</div>
+      <div class="cm">1 + 1 fix · <span class="mdl s">sonnet</span></div>
+      <div class="row"><div class="score g">100<span>%</span></div><div><div class="stars">★★★★★★★★★☆</div><div class="sm">9/10</div></div></div>
+      <ul>
+        <li><b>25 in · 25 out · 25 under 300 KB · 0 resized · 0 quality reductions</b> · 7,891,219 → 2,586,306 B (<b>−67.2%</b>)</li>
+        <li>tuval-hero 1,285,929 → <b>49,824 B</b> at native size (PSNR 41.25 dB) — source was a PNG of a photo</li>
+        <li>first-paint <b>0.218 MB</b> vs 1.5 MB gate · full-scroll 1.511 MB (over by 0.76% if judged that way — both stated) · AVIF <b>rejected: loses on 21/24</b></li>
+      </ul>
+    </div>
+
+    <div class="card now"><div class="badge b-now">🟠 IN FLIGHT</div>
+      <div class="ct">🛡️ W7 · independent verify</div>
+      <div class="cm">3 fresh-context delegates · A reported · B+C running</div>
+      <div class="row"><div class="score o">33<span>%</span></div><div><div class="sm"><span class="mdl">A ✔</span><span class="mdl r">B …</span><span class="mdl r">C …</span></div><div class="sm">only survivors count</div></div></div>
+      <ul>
+        <li>A static: tsc 60 files · lint 61 · <b>260 passed / 1 skipped</b> (skip proven dormant) · 0 ⚠ · memorial facts <b>5/5</b></li>
+        <li>🔴 <b>9 items did not survive</b> — headline: <b>DoD #4 wholly absent</b>: 0 Playwright specs, 0 config, yet <code>"e2e"</code> declared = dead script (same class as W2's lint)</li>
+        <li>B (browser) + C (adversarial) still in flight — no "done" claim is legal until they land</li>
+      </ul>
+    </div>
+
+    <div class="card plan"><div class="badge b-plan">PENDING</div>
+      <div class="ct">📚 W8 · handoff</div>
+      <div class="cm">after W7-B/C · <span class="mdl s">sonnet</span></div>
+      <div class="row"><div class="score">0<span>%</span></div><div><div class="sm">5 docs + dashboard + DELTA + tarball</div></div></div>
+      <ul>
+        <li>counts READ from the ledger, never re-typed (law 6)</li>
+        <li>DECISIONS with reversal cost · OPEN with file:line · DEFERRED with closers</li>
+        <li>⛔ no archiving (yours) · no git (yours)</li>
+      </ul>
+    </div>
+
+    <div class="card done" style="border-color:#1B4F82"><div class="badge" style="background:#1B4F82">DISCIPLINE</div>
+      <div class="ct">⚖️ law compliance</div>
+      <div class="cm">measured across every wave</div>
+      <div class="row"><div class="score g">10<span>/10</span></div><div><div class="stars">★★★★★★★★★★</div><div class="sm">no line crossed</div></div></div>
+      <ul>
+        <li><b>0</b> writes to ravid_website1 · <b>0</b> git changes · <b>0</b> deletes · <b>0</b> secret values</li>
+        <li><b>16 false premises in my own briefs</b> — every one caught by a delegate <i>before</i> execution (law 7 worked)</li>
+        <li>budgets never raised: every wave ran 1.3–2.3× allowance → briefs were <b>split</b>, not widened</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="two">
+    <div class="panel">
+      <div class="pt">🔬 3 MEASURING INSTRUMENTS CAUGHT LYING (law 3 earning its keep)</div>
+      <table>
+        <tr><th>INSTRUMENT</th><th>WHAT IT CLAIMED</th><th>REALITY</th></tr>
+        <tr><td><code>grep -ci 'warn'</code></td><td>build clean</td><td class="r">blind to <b>⚠</b> — the actual symbol Next prints</td></tr>
+        <tr><td>page-weight probe</td><td>weight within gate</td><td class="r">measured <b>uncompressed JPEG</b>, not gzipped AVIF</td></tr>
+        <tr><td>Hebrew detector</td><td>0 Hebrew in sections ✔</td><td class="r">could not find Hebrew <b>anywhere</b> — green meant nothing</td></tr>
+        <tr><td><code>npm run lint</code> (W2)</td><td>"✔ No ESLint warnings"</td><td class="r">ran a silently-chosen <b>subset</b></td></tr>
+        <tr><td><code>npm run e2e</code> (W7-A)</td><td>declared script</td><td class="r"><b>dead</b> — 0 specs, 0 config</td></tr>
+        <tr><td>typed message keys (W3)</td><td>compile-time safety</td><td class="r"><b>inert</b> — one array collapsed the key type</td></tr>
+        <tr><td>"every text and name rendered" (W4)</td><td>GREEN with broken attribution</td><td class="r">only the <b>same-card</b> assertion discriminated</td></tr>
+      </table>
+    </div>
+
+    <div class="panel red">
+      <div class="pt red">🔴 MORNING — what needs you</div>
+      <table>
+        <tr><th>ITEM</th><th>STATE</th></tr>
+        <tr><td><b>DoD #4 — Playwright harness absent</b>. Either W7-B lands it or it is recorded as descoped. <b>No "definition of done met" claim is legal until then.</b></td><td class="r">largest open</td></tr>
+        <tr><td><b>5 customer answers</b> — instagram handle · lead email · numbers (1000+/57/1400) · wine links · domain. Each is a <b>one-edit</b> item at a measured file:line</td><td class="o">8 of 13 OPEN are one-edit</td></tr>
+        <tr><td><b>Email provider key</b> — lead API proved 503-unconfigured by design; it stays 503 until the env value exists (never written by an agent)</td><td class="o">your .env.local</td></tr>
+        <tr><td><b>Full-scroll 1.511 MB</b> vs the 1.5 MB gate — 0.76% over on one reading, 0.218 MB on first paint. Decide which number is the gate</td><td class="o">decision</td></tr>
+        <tr><td><b>Quarantine review</b> — 66 items in _legacy/ with WHY.md · then git + archiving (both yours)</td><td>after W7</td></tr>
+      </table>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

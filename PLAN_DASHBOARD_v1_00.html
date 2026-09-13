@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ravid_website rebuild — PLAN DASHBOARD v1.01 (overnight)</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#FFFFFF;color:#14202B;font-family:"Segoe UI",Arial,Helvetica,sans-serif;font-size:15px}
+  .w{width:1240px;margin:0 auto;padding:22px}
+  h1{font-size:31px;margin:0 0 6px 0;color:#1B4F82;font-weight:800}
+  .src{font-size:13px;color:#5B6B7B;margin-bottom:18px}
+  .ovr{border:2px solid #1B4F82;border-radius:10px;padding:16px 18px;display:flex;align-items:center;gap:18px;margin-bottom:20px}
+  .ovr .pct{font-size:44px;font-weight:800;color:#1B4F82;min-width:120px;text-align:center}
+  .ovr .mid{flex:1}
+  .ovr .t{font-weight:800;font-size:17px;text-align:center;margin-bottom:8px}
+  .track{height:16px;background:#E7ECF1;border-radius:8px;overflow:hidden}
+  .fill{height:100%;background:#C9781A}
+  .chips{margin-top:9px;font-size:13px;color:#33475B;text-align:center}
+  .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px}
+  .card{border:2px solid #D7DEE5;border-radius:10px;padding:14px 15px;position:relative}
+  .card.done{border-color:#1B7F3F}
+  .card.now{border-color:#C9781A}
+  .card.plan{border-color:#7A8A99;background:#FAFBFC}
+  .badge{position:absolute;top:-11px;left:14px;font-size:12px;font-weight:800;color:#FFF;padding:3px 9px;border-radius:10px}
+  .b-done{background:#1B7F3F}.b-now{background:#C9781A}.b-plan{background:#5B6B7B}
+  .ct{font-weight:800;font-size:18px;margin:2px 0 3px 0}
+  .cm{font-size:12.5px;color:#5B6B7B;margin-bottom:9px}
+  .row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+  .score{font-size:31px;font-weight:800;color:#14202B}
+  .score span{font-size:15px;color:#5B6B7B}
+  .stars{color:#C9781A;font-size:14px;letter-spacing:1px}
+  .sm{font-size:12.5px;color:#33475B}
+  ul{margin:8px 0 0 0;padding-inline-start:18px}
+  li{font-size:12.8px;margin-bottom:5px;line-height:1.4}
+  .mdl{display:inline-block;font-family:Consolas,monospace;font-size:11.5px;font-weight:800;padding:2px 7px;border-radius:4px;background:#E8F0F8;color:#1B4F82;margin-inline-end:4px}
+  .mdl.s{background:#EAF5EE;color:#1B7F3F}
+  .mdl.r{background:#FBE9E7;color:#B3261E}
+  .two{display:grid;grid-template-columns:1.15fr 1fr;gap:16px}
+  .panel{border:2px solid #D7DEE5;border-radius:10px;padding:14px 15px}
+  .pt{font-weight:800;font-size:18px;margin-bottom:10px;color:#1B4F82}
+  table{width:100%;border-collapse:collapse}
+
+  th{background:#1B3B5C;color:#FFF;font-size:12.5px;padding:8px 10px;text-align:left}
+  td{font-size:12.6px;padding:7px 10px;border-bottom:1px solid #E7ECF1;vertical-align:top}
+  tr:nth-child(even) td{background:#F7F9FB}
+  .g{color:#1B7F3F;font-weight:800}.o{color:#C9781A;font-weight:800}.r{color:#B3261E;font-weight:800}
+</style>
+</head>
+<body>
+<div class="w">
+
+  <h1>🌙 ravid_website rebuild v1.01 — OVERNIGHT PLAN · 12.9.2026 · before W1</h1>
+  <div class="src">SOURCE: PROMPT_RULES_v1_00.md (law) · REBUILD_PLAN_v1.00.md (design) · CLAUDE_CODE_PROMPTS_v1_00.md (8 waves) · read: ravid_website (594 L monolith) + ravid_website1 (customer Lovable/Vite, 13 sections, 26 assets) · ledger REBUILD_STATUS_v1_00.md = created by W1 · run sheet OVERNIGHT_RUN_v1_00.md</div>
+
+  <div class="ovr">
+    <div class="mid">
+      <div class="t">EXECUTION PROGRESS — weighted by planned agent-hours (0 of ~16h · 0 of 53 files · 0 of 8 gates)</div>
+      <div class="track"><div class="fill" style="width:11%"></div></div>
+      <div class="chips">W0 ✅ plan+prompts · W1 ⬜ · W2 ⬜ · W3 ⬜ · W4 ⬜ · W5 ⬜ · W6 ⬜ · W7 ⬜ · W8 ⬜ &nbsp;·&nbsp; 24 delegates planned (18 opus · 6 sonnet) &nbsp;·&nbsp; OVERNIGHT MODE — no human gate · unknowns become ONE typed constant + a one-edit OPEN item</div>
+    </div>
+    <div class="pct">11%</div>
+  </div>
+
+  <div class="ovr" style="border-color:#B3261E">
+    <div class="mid">
+      <div class="t" style="color:#B3261E">⚖️ ARCHITECTURE LAW — pasted into every wave, outranks speed, scope and token budget</div>
+      <div class="chips" style="font-size:13.5px;line-height:1.6">RIGHT ARCHITECTURE OR NOTHING — rewrite the unit rather than bend it &nbsp;·&nbsp; NEVER PATCH OVER A PATCH — 2nd fix on a spot = step up a level, 3rd = rewrite from scratch &nbsp;·&nbsp; NEVER ASK PERMISSION TO DO IT WORSE — no "quick vs proper", no "patch now refactor later"; the answer is permanently DO IT RIGHT &nbsp;·&nbsp; NO PARTIAL LANDING — not correct + tested + independently verified = NOT DONE &nbsp;·&nbsp; ONE FACT ONE PLACE &nbsp;·&nbsp; DEAD THINGS DELETED (to _legacy/, never rm)</div>
+    </div>
+  </div>
+
+  <div class="grid">
+
+    <div class="card done"><div class="badge b-done">✔ DONE</div>
+      <div class="ct">🚀 W0 · plan + prompt pack</div>
+      <div class="cm">Cowork seat · 2 docs written into the repo</div>
+      <div class="row"><div class="score">100<span>%</span></div><div><div class="stars">★★★★★★★★★☆</div><div class="sm">score 9/10</div></div></div>
+      <ul>
+        <li>REBUILD_PLAN_v1.00.md — architecture, 8 waves, risk, DoD</li>
+        <li>CLAUDE_CODE_PROMPTS_v1_00.md — paste-ready W1–W8, rules inside each</li>
+        <li>DECIDED: deep rebuild · Next App Router · next-intl he/en · discard both old structures</li>
+      </ul>
+    </div>
+
+    <div class="card now"><div class="badge b-now">▶ NEXT</div>
+      <div class="ct">🔍 W1 · recon (read-only)</div>
+      <div class="cm">3 ∥ delegates · 180k tokens · ~0:45h · effort xhigh</div>
+      <div class="row"><div class="score">0<span>%</span></div><div><div class="sm"><span class="mdl">opus</span><span class="mdl">opus</span><span class="mdl s">sonnet</span></div><div class="sm">target 10/10</div></div></div>
+      <ul>
+        <li>OUT: REBUILD_STATUS_v1_00.md (the ledger) + REPORT_W1.md</li>
+        <li>GATE: every plan number marked CONFIRMED / FALSE / CANNOT-TELL (law 7)</li>
+        <li>⛔ zero writes to existing files · customer repo read-only</li>
+      </ul>
+    </div>
+
+    <div class="card plan"><div class="badge b-plan">PLANNED</div>
+      <div class="ct">🏗️ W2 · scaffold + quarantine</div>
+      <div class="cm">2 delegates · 100k · ~0:35h · effort normal</div>
+      <div class="row"><div class="score">0<span>%</span></div><div><div class="sm"><span class="mdl">opus</span><span class="mdl s">sonnet</span></div><div class="sm">target 10/10</div></div></div>
+      <ul>
+        <li>OUT: Next App Router skeleton, TS strict, Tailwind tokens = customer HSL</li>
+        <li>GATE: build green on empty page · 0 files deleted (proved by count)</li>
+        <li>⛔ mv → _legacy/ + WHY.md · never rm · dead i18n{} key removed</li>
+      </ul>
+    </div>
+
+    <div class="card plan"><div class="badge b-plan">PLANNED</div>
+      <div class="ct">🌐 W3 · i18n core he+en</div>
+      <div class="cm">2 delegates · 150k · ~0:50h · effort xhigh</div>
+      <div class="row"><div class="score">0<span>%</span></div><div><div class="sm"><span class="mdl">opus</span><span class="mdl s">sonnet</span></div><div class="sm">target 10/10</div></div></div>
+      <ul>
+        <li>OUT: /he + /en routing, dir rtl|ltr, hreflang, / → /he, typed keys (no any)</li>
+        <li>GATE: key count he == en, or each missing key listed as OPEN</li>
+        <li>⛔ no agent-authored translation — copied from translations.ts or NOT-MEASURED</li>
+      </ul>
+    </div>
+
+    <div class="card plan"><div class="badge b-plan">PLANNED</div>
+      <div class="ct">🧩 W4 · 13 sections</div>
+      <div class="cm">13 ∥ delegates · 70k each · ~2:00h · batches of 4–5</div>
+      <div class="row"><div class="score">0<span>%</span></div><div><div class="sm"><span class="mdl">opus ×13</span></div><div class="sm">target 10/10</div></div></div>
+      <ul>
+        <li>OUT: Hero · Story · Military · LecturesPreview · Stats · WhatYouGet · HowItLooks · Testimonials · Why · Wine · LeadForm · Footer · LangSwitcher (+1 test each)</li>
+        <li>GATE: 13/13 own tests green · grep = 0 hardcoded Hebrew in sections/</li>
+        <li>⚠️ never blocked: unknown value → 1 typed constant seeded from the customer repo + OPEN item</li>
+      </ul>
+    </div>
+
+    <div class="card plan"><div class="badge b-plan">PLANNED</div>
+      <div class="ct">🔌 W5 · platform</div>
+      <div class="cm">3 ∥ delegates · 160k · ~0:50h</div>
+      <div class="row"><div class="score">0<span>%</span></div><div><div class="sm"><span class="mdl">opus</span><span class="mdl">opus</span><span class="mdl s">sonnet</span></div><div class="sm">target 10/10</div></div></div>
+      <ul>
+        <li>OUT: api/lead (zod → email → 200/4xx, WhatsApp fallback) · SEO/OG/sitemap · analytics</li>
+        <li>GATE: invalid POST proven 4xx + provider-down test (law 3) · grep lovable = 0</li>
+        <li>⛔ env var NAMES only — no secret value ever written to a file</li>
+      </ul>
+    </div>
+
+    <div class="card plan"><div class="badge b-plan">PLANNED</div>
+      <div class="ct">🖼️ W6 · asset pipeline</div>
+      <div class="cm">1 delegate · 50k · ~0:20h</div>
+      <div class="row"><div class="score">0<span>%</span></div><div><div class="sm"><span class="mdl s">sonnet</span></div><div class="sm">target 9/10</div></div></div>
+      <ul>
+        <li>OUT: 26 assets → webp/avif ≤300 KB + before/after manifest</li>
+        <li>GATE: 26/26 numbered · page weight ≤1.5 MB · hero priority only</li>
+        <li>⛔ no crop that changes content · no generated imagery</li>
+      </ul>
+    </div>
+
+    <div class="card plan"><div class="badge b-plan">PLANNED</div>
+      <div class="ct">🛡️ W7 · independent verify</div>
+      <div class="cm">3 ∥ fresh-context delegates · ~1:00h</div>
+      <div class="row"><div class="score">0<span>%</span></div><div><div class="sm"><span class="mdl">opus</span><span class="mdl">opus</span><span class="mdl r">opus·adv</span></div><div class="sm">target: survives</div></div></div>
+      <ul>
+        <li>OUT: static (tsc/lint/build/vitest) · visual (he+en × mobile+desktop) · adversarial</li>
+        <li>GATE: replayed / still failing / NEWLY failing — skips counted separately</li>
+        <li>🔴 law 4: verifiers wrote none of it · verifiers REPORT, never repair (fixes = W7b atoms)</li>
+      </ul>
+    </div>
+
+    <div class="card plan"><div class="badge b-plan">PLANNED</div>
+      <div class="ct">📚 W8 · handoff</div>
+      <div class="cm">1 delegate · 60k · ~0:20h</div>
+      <div class="row"><div class="score">0<span>%</span></div><div><div class="sm"><span class="mdl s">sonnet</span></div><div class="sm">target 10/10</div></div></div>
+      <ul>
+        <li>OUT: README · MASTER_PLAN · START_HERE · STATUS_DASHBOARD.html · SESSION_2_DELTA · tarball</li>
+        <li>GATE: all counts READ from the ledger, never re-typed (law 6)</li>
+        <li>⛔ no archiving — Mati archives · no git — Mati commits</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="two">
+    <div class="panel">
+      <div class="pt">📈 NUMBERS — now vs target</div>
+      <table>
+        <tr><th>METRIC</th><th>NOW (ours, live)</th><th>TARGET (rebuild)</th></tr>
+        <tr><td>Components / sections</td><td>1 file · 594 L · 8 sections</td><td class="g">13 files · ~1450 L · 13 sections</td></tr>
+        <tr><td>Languages</td><td>he only · no locale URL</td><td class="g">he + en · /he /en · hreflang · dir flip</td></tr>
+        <tr><td>Message keys</td><td>0 (copy hardcoded in JSX)</td><td class="g">he == en, diff listed if not</td></tr>
+        <tr><td>Lead delivery</td><td class="r">alert() — 0 leads sent</td><td class="g">api/lead 200 + 4xx proven + WA fallback</td></tr>
+        <tr><td>Rendering</td><td>client monolith</td><td class="g">server components, 2 client islands</td></tr>
+        <tr><td>Images</td><td>7 files, plain grid</td><td class="g">26 → webp ≤300 KB, next/image</td></tr>
+        <tr><td>Page weight</td><td>not measured</td><td class="g">≤1.5 MB</td></tr>
+        <tr><td>SEO</td><td class="r">no metadataBase · no OG · no sitemap</td><td class="g">per-locale metadata · OG · sitemap · robots</td></tr>
+        <tr><td>Analytics</td><td class="r">file exists, never imported</td><td class="g">imported + import asserted in a test</td></tr>
+        <tr><td>Lovable artefacts</td><td>n/a</td><td class="g">grep lovable == 0</td></tr>
+        <tr><td>Tests</td><td class="r">0</td><td class="g">13 unit + e2e 4 screenshots + adversarial set</td></tr>
+        <tr><td>Delegates / models</td><td>—</td><td class="g">24 total: 18 opus · 6 sonnet · seat writes ledger only</td></tr>
+      </table>
+    </div>
+
+    <div class="panel">
+      <div class="pt">👤 YOURS — 6 items only you can do</div>
+      <table>
+        <tr><th>WHAT</th><th>WHEN</th></tr>
+        <tr><td><b>5 customer answers</b> — Instagram handle (ravid._.t vs ravid_.t) · lead email target · final numbers (1000+/57/1400) · keep wine shop links · domain + / → /he</td><td class="o">when you wake — each is a one-edit item, file:line in §OPEN</td></tr>
+        <tr><td><b>Set /goal + paste the OVERNIGHT block</b> (OVERNIGHT_RUN_v1_00.md steps 1–2) — then sleep</td><td class="r">now</td></tr>
+        <tr><td><b>/effort xhigh</b> — leave it there for the night (W1+W3 need it; later waves execute written briefs)</td><td class="o">now</td></tr>
+        <tr><td><b>git</b> — every commit, branch, push (no agent touches it)</td><td>each wave</td></tr>
+        <tr><td><b>Email provider key</b> — Resend (or chosen) API key in .env.local, value never in a file the agents write</td><td>before W5</td></tr>
+        <tr><td><b>Quarantine approval + archiving</b> — review _legacy/WHY.md, archive prior versions yourself</td><td>after W2</td></tr>
+      </table>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

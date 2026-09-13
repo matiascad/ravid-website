@@ -1,33 +1,53 @@
 {
   "name": "tuval-memorial-website",
   "version": "1.0.0",
-  "description": "Memorial website for Tuval Yaakov Tsanani - Lecture booking landing page by Ravid Tsanani",
+  "description": "Memorial website for Tuval Yaakov Tzanani - Lecture booking landing page by Ravid Tzanani",
   "private": true,
-  "author": "Ravid Tsanani",
+  "author": "Ravid Tzanani",
+  "_INVARIANT": "Every dependency in this file is one the rebuild has a named use for. The customer build's 12 unused runtime deps and all 49 shadcn ui/* components are absent by construction (ledger D-2).",
+  "_IMPOSSIBLE": "A component cannot import recharts / embla-carousel-react / react-day-picker / date-fns / cmdk / vaul / input-otp / react-resizable-panels / next-themes / react-hook-form / @hookform/resolvers / @tanstack/react-query / lovable-tagger: they are not in the module graph, so such an import is a build error, not a silent dead weight.",
+  "_HONEST_LIMIT": "This file guarantees only that a package is INSTALLED, never that it is USED. It cannot stop a NEW dead dependency from being added later; it only proves none of the customer's known-dead set is here today. It also does not pin transitive versions - package-lock.json does. lucide-react is NOT installed: the brief's dependency set does not name it; if W4 sections need icons, that is one line plus one install, and it must be justified in the ledger.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "e2e": "playwright test"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "next": "^14.0.4",
-    "lucide-react": "^0.263.1"
+    "clsx": "^2.1.1",
+    "next": "^15.5.25",
+    "next-intl": "^4.14.4",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "tailwind-merge": "^3.6.0",
+    "zod": "^4.6.2"
   },
   "devDependencies": {
-    "typescript": "^5.3.3",
-    "@types/node": "^20.10.6",
-    "@types/react": "^18.2.46",
-    "@types/react-dom": "^18.2.18",
-    "tailwindcss": "^3.4.0",
-    "postcss": "^8.4.32",
-    "autoprefixer": "^10.4.16",
-    "eslint": "^8.56.0",
-    "eslint-config-next": "^14.0.4"
+    "@eslint/eslintrc": "^3.3.7",
+    "@playwright/test": "^1.63.0",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.7",
+    "@types/node": "^22.20.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "autoprefixer": "^10.6.0",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^15.5.25",
+    "jsdom": "^30.0.1",
+    "postcss": "^8.5.28",
+    "sharp": "^0.35.4",
+    "tailwindcss": "^3.4.19",
+    "tailwindcss-animate": "^1.0.7",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.0"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20"
   }
 }

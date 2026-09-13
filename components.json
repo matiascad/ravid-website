@@ -1,0 +1,21 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "_HEADER": "W2-A1 SCAFFOLD-CONFIG. NO shadcn COMPONENT IS INSTALLED. This file exists so that `npx shadcn@latest add <name>` lands a component in the right place with the right aliases IF one is ever needed - it is not a declaration that shadcn is in use. Ledger D-2: W1 measured 0 of the customer's 49 ui/* files used by any of its 13 sections; all 13 are raw HTML + Tailwind. Every component added later MUST be named and justified in REBUILD_STATUS_v1_00.md under D-2 before it is added.",
+  "_INVARIANT": "components/ui/ contains only files a section provably needs, each with a written justification in the ledger.",
+  "_IMPOSSIBLE": "The 37-dead-ui-file class cannot be recreated in one step: there is no bulk install path here and no component is pre-seeded, so dead files can only arrive one deliberate, individually-justified command at a time.",
+  "_HONEST_LIMIT": "This is a convention, not an enforcement. Nothing in this file BLOCKS `npx shadcn@latest add`, and nothing checks that a justification was written. A CI grep counting components/ui/* against the ledger's D-2 list would close that gap; it does not exist. This file also names app/globals.css and lib/utils, neither of which this delegate created - both belong to other delegates.",
+  "style": "default",
+  "rsc": true,
+  "tsx": true,
+  "tailwind": {
+    "config": "tailwind.config.ts",
+    "css": "app/globals.css",
+    "baseColor": "slate",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils"
+  }
+}

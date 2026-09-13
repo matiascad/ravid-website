@@ -1,10 +1,81 @@
 {
+  // ─────────────────────────────────────────────────────────────────────────────
+  // W2-A1 SCAFFOLD-CONFIG
+  // INVARIANT   Every .ts/.tsx file outside node_modules and _legacy is checked
+  //             under `strict` PLUS noUncheckedIndexedAccess, noImplicitOverride
+  //             and forceConsistentCasingInFileNames.
+  // IMPOSSIBLE  `stats[4]` / `testimonials[3]` / `lectureItems[4]` cannot be read
+  //             as a guaranteed value: noUncheckedIndexedAccess types every index
+  //             access as `T | undefined`, so "index an array and assume something
+  //             came back" is a COMPILE error, not a runtime blank. The customer's
+  //             `t: any` pattern cannot be reconstructed silently either - `any`
+  //             is still expressible, but it can no longer hide a missing element.
+  //             Quarantined code in _legacy/ cannot be type-checked or built:
+  //             it is not in the program at all.
+  // CLASS       Closed by derivation for the whole repo, not this file only: the
+  //             include/exclude pair is the program definition, so any file added
+  //             anywhere under the repo is checked, and any file moved to _legacy/
+  //             stops being checked. No per-file opt-in exists.
+  // HONEST LIMIT  This does NOT ban `any`, `as`, `!` or `@ts-expect-error` - all
+  //             four still defeat every flag here, and ledger D-6 makes the `any`
+  //             gate a grep over components/ + i18n/, not a compiler flag.
+  //             `skipLibCheck: true` means third-party .d.ts files are NOT checked.
+  //             It also does not run: a green tsc is not a green build.
+  //
+  // ─── W2-FIX-E  DECLARE THE TEST GLOBALS ──────────────────────────────────────
+  // INVARIANT   The set of ambient GLOBAL types in this program is exactly the
+  //             `types` list below - stated once, reviewable, and identical for
+  //             every file in the program. Within it, the test globals injected at
+  //             runtime by `globals: true` in vitest.config.ts are the SAME names
+  //             the compiler knows: `vitest/globals` is that one runtime fact's
+  //             type-level mirror, not a second statement of it.
+  // IMPOSSIBLE  A test file that uses `describe`/`it`/`expect` without importing
+  //             them can no longer be a TYPE error - so the thirteen test files
+  //             W4 is about to write cannot each need their own import block, and
+  //             the workaround that would diverge has nothing to work around.
+  //             Also impossible: an unrelated package landing in node_modules/@types
+  //             and injecting globals into every file invisibly. Auto-inclusion is
+  //             off; a new global now requires an edit to this line.
+  // CLASS       Closed by derivation for the whole program, not for one test file:
+  //             `types` is a program-wide compilerOption, so ANY file added anywhere
+  //             under the include globs sees these globals without editing anything.
+  //             The instance-only fix - importing the three names in
+  //             lib/__tests__/utils.test.ts - was available and was refused: it
+  //             closes one file and reopens on the next thirteen.
+  // HONEST LIMIT  This is a CLOSED list, and that cuts both ways: adding a
+  //             dependency whose value is a global (a polyfill's .d.ts, jest-dom
+  //             consumed ambiently rather than imported, @types/bun) will now FAIL
+  //             until this line names it, and the error will point at the use site,
+  //             not at this file. It also does not verify that `vitest/globals` and
+  //             `globals: true` still agree: they are two files, and only review -
+  //             or a red tsc - detects drift if someone sets `globals: false`.
+  //             It declares globals only; it type-checks no test ASSERTION and
+  //             guarantees no test EXISTS.
+  // ─────────────────────────────────────────────────────────────────────────────
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ES2022",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
+
+    // AMBIENT GLOBAL TYPES — the complete, declared list. See W2-FIX-E note below.
+    // `types` REPLACES the default "auto-include every package under
+    // node_modules/@types", so this list must name every package whose GLOBAL
+    // declarations the program needs. Packages that are IMPORTED (react,
+    // @testing-library/*, vitest) resolve through module resolution and do not
+    // need an entry; only globals do.
+    //   node          -> process, Buffer, NodeJS.*, node:path / node:url
+    //   react          |  kept explicit so a future `jsx` setting that resolves the
+    //   react-dom      |  global JSX namespace cannot silently lose it
+    //   vitest/globals -> describe / it / expect / vi / beforeEach ..., the
+    //                     type-level mirror of `globals: true` in vitest.config.ts
+    "types": ["node", "react", "react-dom", "vitest/globals"],
+
     "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "forceConsistentCasingInFileNames": true,
+
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
@@ -13,15 +84,9 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "paths": {
-      "@/*": ["./*"]
-    }
+    "plugins": [{ "name": "next" }],
+    "paths": { "@/*": ["./*"] }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "_legacy", "out"]
 }
